@@ -4,17 +4,24 @@ services:
     runtime: node
     plan: free
     rootDir: server
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         sync: false
+      - key: DIRECT_URL
+        sync: false
       - key: JWT_ACCESS_SECRET
         sync: false
       - key: JWT_REFRESH_SECRET
         sync: false
+      - key: JWT_ACCESS_EXPIRES
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES
+        value: 7d
       - key: CLIENT_URL
         sync: false
       - key: GROQ_API_KEY
@@ -26,4 +33,8 @@ services:
       - key: AI_PROVIDER
         value: groq
       - key: PORT
-        value: 4000
+        value: "4000"
+      - key: NTFY_DEFAULT_SERVER
+        value: https://ntfy.sh
+      - key: NOTION_API_KEY
+        sync: false
