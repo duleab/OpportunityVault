@@ -1,0 +1,293 @@
+import type { Response } from 'express';
+import type { AppStatus, OpportunityType } from '@prisma/client';
+import { addDays } from 'date-fns';
+import { AppError, asyncHandler } from '../middleware/errorHandler.js';
+import type { AuthRequest } from '../middleware/auth.middleware.js';
+import { prisma, stringifyJsonArray } from '../lib/prisma.js';
+import { extractWithFallback } from '../services/extraction.service.js';
+import { notifyNewOpportunity, notifyStatusChange } from '../services/notification.service.js';
+import { exportCsv, exportJson, exportToNotion } from '../services/export.service.js';
+import { serializeOpportunity } from '../utils/serializeOpportunity.js';
+import type { ExtractedData } from '../types/index.js';
+import { calculateUrgency } from '../utils/urgencyCalculator.js';
+
+function buildOpportunityData(
+  extracted: ExtractedData,
+  rawText: string,
+  userEdits?: Record<string, unknown>
+) {
+  const merged = { ...extracted, ...userEdits };
+  const deadline = merged.deadline ? new Date(String(merged.deadline)) : null;
+  const startDate = merged.startDate ? new Date(String(merged.startDate)) : null;
+  const urgency = calculateUrgency(deadline);
+
+  return {
+    name: String(merged.name ?? 'Untitled Opportunity'),
+    organization: merged.organization ? String(merged.organization) : null,
+    description: merged.description ? String(merged.description) : null,
+    type: (merged.type as OpportunityType) ?? 'OTHER',
+    level: merged.level ? String(merged.level) : null,
+    field: merged.field ? String(merged.field) : null,
+    countries: stringifyJsonArray(Array.isArray(merged.countries) ? merged.countries.map(String) : []),
+    isRemote: Boolean(merged.isRemote),
+    isOnline: Boolean(merged.isOnline),
+    deadline,
+    startDate,
+    duration: merged.duration ? String(merged.duration) : null,
+    hasFee: Boolean(merged.hasFee),
+    feeAmount: merged.feeAmount ? String(merged.feeAmount) : null,
+    funding: merged.funding ? String(merged.funding) : null,
+    applicationLink: merged.applicationLink ? String(merged.applicationLink) : null,
+    sourceUrl: merged.sourceUrl ? String(merged.sourceUrl) : null,
+    websiteUrl: merged.websiteUrl ? String(merged.websiteUrl) : null,
+    eligibility: merged.eligibility ? String(merged.eligibility) : null,
+    requirements: stringifyJsonArray(
+      Array.isArray(merged.requirements) ? merged.requirements.map(String) : []
+    ),
+    languageReq: merged.languageReq ? String(merged.languageReq) : null,
+    isUrgent: urgency.isUrgent,
+    urgencyLevel: urgency.level,
+    status: 'SAVED' as AppStatus,
+    rawText,
+    aiExtractedData: JSON.stringify({ ...extracted, userEdits: userEdits ?? null }),
+  };
+}
+
+export const extractPreview = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { rawText, provider } = req.body as { rawText?: string; provider?: string };
+  if (!rawText?.trim()) throw new AppError(400, 'rawText is required');
+
+  const result = await extractWithFallback(rawText, provider);
+  res.json({
+    extracted: result.extracted,
+    confidence: result.extracted.confidence,
+    provider: result.provider,
+    lowConfidenceFields: result.lowConfidenceFields,
+    warning: result.warning,
+  });
+});
+
+export const saveExtracted = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const { extracted, rawText, userEdits } = req.body as {
+    extracted?: ExtractedData;
+    rawText?: string;
+    userEdits?: Record<string, unknown>;
+  };
+
+  if (!extracted || !rawText) throw new AppError(400, 'extracted and rawText are required');
+
+  const data = buildOpportunityData(extracted, rawText, userEdits);
+  const opp = await prisma.opportunity.create({ data: { ...data, userId } });
+
+  await notifyNewOpportunity(userId, opp);
+  res.status(201).json({ opportunity: serializeOpportunity(opp) });
+});
+
+export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const {
+    type, status, country, urgency, search,
+    sortBy = 'deadline', sortOrder = 'asc',
+    page = '1', limit = '20',
+  } = req.query as Record<string, string>;
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (pageNum - 1) * limitNum;
+
+  const where: Record<string, unknown> = { userId };
+  if (type) where.type = type;
+  if (status) where.status = status;
+  if (search) {
+    where.OR = [
+      { name: { contains: search } },
+      { organization: { contains: search } },
+      { description: { contains: search } },
+    ];
+  }
+
+  const rows = await prisma.opportunity.findMany({
+    where: where as never,
+    orderBy: { [sortBy]: sortOrder === 'desc' ? 'desc' : 'asc' },
+  });
+
+  let serialized = rows.map(serializeOpportunity);
+
+  if (country) {
+    serialized = serialized.filter((o) =>
+      o.countries.some((c) => c.toLowerCase().includes(country.toLowerCase()))
+    );
+  }
+
+  if (urgency) {
+    serialized = serialized.filter((o) => o.urgency.level === urgency);
+  }
+
+  const total = serialized.length;
+  const data = serialized.slice(skip, skip + limitNum);
+
+  res.json({
+    data,
+    total,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
+  });
+});
+
+export const getOpportunity = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const opp = await prisma.opportunity.findFirst({
+    where: { id: req.params.id, userId: req.user!.userId },
+  });
+  if (!opp) throw new AppError(404, 'Opportunity not found');
+  res.json({ opportunity: serializeOpportunity(opp) });
+});
+
+export const updateOpportunity = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const existing = await prisma.opportunity.findFirst({
+    where: { id: req.params.id, userId },
+  });
+  if (!existing) throw new AppError(404, 'Opportunity not found');
+
+  const body = req.body as Record<string, unknown>;
+  const updateData: Record<string, unknown> = {};
+
+  const stringFields = [
+    'name', 'organization', 'description', 'level', 'field', 'duration',
+    'feeAmount', 'funding', 'applicationLink', 'sourceUrl', 'websiteUrl',
+    'eligibility', 'languageReq', 'rejectedReason', 'notes',
+  ];
+  stringFields.forEach((f) => {
+    if (body[f] !== undefined) updateData[f] = body[f];
+  });
+
+  if (body.type) updateData.type = body.type;
+  if (body.status) {
+    updateData.status = body.status;
+    if (body.status === 'APPLIED') updateData.appliedAt = new Date();
+  }
+  if (body.isRemote !== undefined) updateData.isRemote = body.isRemote;
+  if (body.isOnline !== undefined) updateData.isOnline = body.isOnline;
+  if (body.hasFee !== undefined) updateData.hasFee = body.hasFee;
+  if (body.deadline !== undefined) {
+    updateData.deadline = body.deadline ? new Date(String(body.deadline)) : null;
+  }
+  if (body.startDate !== undefined) {
+    updateData.startDate = body.startDate ? new Date(String(body.startDate)) : null;
+  }
+  if (body.countries) updateData.countries = stringifyJsonArray(body.countries as string[]);
+  if (body.requirements) updateData.requirements = stringifyJsonArray(body.requirements as string[]);
+
+  const opp = await prisma.opportunity.update({
+    where: { id: existing.id },
+    data: updateData,
+  });
+
+  if (body.status && body.status !== existing.status) {
+    await notifyStatusChange(userId, opp, String(body.status));
+  }
+
+  res.json({ opportunity: serializeOpportunity(opp) });
+});
+
+export const deleteOpportunity = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const existing = await prisma.opportunity.findFirst({
+    where: { id: req.params.id, userId: req.user!.userId },
+  });
+  if (!existing) throw new AppError(404, 'Opportunity not found');
+  await prisma.opportunity.delete({ where: { id: existing.id } });
+  res.json({ message: 'Deleted' });
+});
+
+export const getUrgent = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const rows = await prisma.opportunity.findMany({ where: { userId: req.user!.userId } });
+  const urgent = rows.map(serializeOpportunity).filter((o) => o.urgency.isUrgent);
+  res.json({ data: urgent });
+});
+
+export const getUpcoming = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const days = parseInt(String(req.query.days ?? '30'), 10);
+  const cutoff = addDays(new Date(), days);
+  const rows = await prisma.opportunity.findMany({
+    where: {
+      userId: req.user!.userId,
+      deadline: { gte: new Date(), lte: cutoff },
+    },
+    orderBy: { deadline: 'asc' },
+  });
+  res.json({ data: rows.map(serializeOpportunity) });
+});
+
+export const bulkStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { ids, status } = req.body as { ids?: string[]; status?: AppStatus };
+  if (!ids?.length || !status) throw new AppError(400, 'ids and status required');
+
+  await prisma.opportunity.updateMany({
+    where: { id: { in: ids }, userId: req.user!.userId },
+    data: { status, ...(status === 'APPLIED' ? { appliedAt: new Date() } : {}) },
+  });
+
+  res.json({ message: 'Updated', count: ids.length });
+});
+
+export const exportOpportunities = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const format = String(req.query.format ?? 'json');
+  const userId = req.user!.userId;
+
+  if (format === 'csv') {
+    const csv = await exportCsv(userId);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=opportunities.csv');
+    res.send(csv);
+    return;
+  }
+
+  if (format === 'notion') {
+    const { notionToken, databaseId } = req.query as Record<string, string>;
+    if (!notionToken || !databaseId) throw new AppError(400, 'notionToken and databaseId required');
+    const result = await exportToNotion(userId, notionToken, databaseId);
+    res.json(result);
+    return;
+  }
+
+  const json = await exportJson(userId);
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename=opportunities.json');
+  res.send(json);
+});
+
+export const getStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const now = new Date();
+  const weekAgo = addDays(now, -7);
+  const monthAgo = addDays(now, -30);
+
+  const rows = await prisma.opportunity.findMany({ where: { userId } });
+  const serialized = rows.map(serializeOpportunity);
+
+  const byType: Record<string, number> = {};
+  const byStatus: Record<string, number> = {};
+  serialized.forEach((o) => {
+    byType[o.type] = (byType[o.type] ?? 0) + 1;
+    byStatus[o.status] = (byStatus[o.status] ?? 0) + 1;
+  });
+
+  const upcoming = serialized
+    .filter((o) => o.deadline && o.urgency.daysLeft !== null && o.urgency.daysLeft >= 0)
+    .sort((a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime())
+    .slice(0, 10);
+
+  res.json({
+    total: serialized.length,
+    by_type: byType,
+    by_status: byStatus,
+    urgent_count: serialized.filter((o) => o.urgency.isUrgent).length,
+    applied_count: serialized.filter((o) => o.status === 'APPLIED').length,
+    accepted_count: serialized.filter((o) => o.status === 'ACCEPTED').length,
+    this_week_added: rows.filter((o) => o.createdAt >= weekAgo).length,
+    this_month_added: rows.filter((o) => o.createdAt >= monthAgo).length,
+    upcoming_deadlines: upcoming,
+  });
+});

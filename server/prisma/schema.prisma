@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  name             String?
+  passwordHash     String
+  ntfyTopic        String?
+  ntfyEnabled      Boolean        @default(true)
+  ntfyServerUrl    String         @default("https://ntfy.sh")
+  aiProvider       String         @default("groq")
+  notifyDaysBefore String         @default("[1,3,7]")
+  createdAt        DateTime       @default(now())
+  opportunities    Opportunity[]
+  refreshTokens    RefreshToken[]
+}
+
+model Opportunity {
+  id                String          @id @default(cuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  organization      String?
+  description       String?
+  type              OpportunityType
+  level             String?
+  field             String?
+  countries         String          @default("[]")
+  isRemote          Boolean         @default(false)
+  isOnline          Boolean         @default(false)
+  deadline          DateTime?
+  startDate         DateTime?
+  duration          String?
+  hasFee            Boolean         @default(false)
+  feeAmount         String?
+  funding           String?
+  applicationLink   String?
+  sourceUrl         String?
+  websiteUrl        String?
+  eligibility       String?
+  requirements      String          @default("[]")
+  languageReq       String?
+  isUrgent          Boolean         @default(false)
+  urgencyLevel      String          @default("normal")
+  status            AppStatus       @default(SAVED)
+  appliedAt         DateTime?
+  rejectedReason    String?
+  notes             String?
+  rawText           String
+  aiExtractedData   String
+  notificationsSent String          @default("[]")
+  lastNotifiedAt    DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+enum OpportunityType {
+  SCHOLARSHIP
+  FELLOWSHIP
+  GRANT
+  JOB
+  INTERNSHIP
+  RESEARCH
+  SUMMER_PROGRAM
+  COMPETITION
+  CONFERENCE
+  VOLUNTEER
+  EXCHANGE
+  TRAINING
+  OTHER
+}
+
+enum AppStatus {
+  SAVED
+  PLANNING
+  IN_PROGRESS
+  APPLIED
+  INTERVIEW
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  SKIPPED
+  EXPIRED
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+}
