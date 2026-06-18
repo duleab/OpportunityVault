@@ -59,11 +59,10 @@ export const extractPreview = asyncHandler(async (req: AuthRequest, res: Respons
 
   const result = await extractWithFallback(rawText, provider);
   res.json({
-    extracted: result.extracted,
-    confidence: result.extracted.confidence,
+    extractions: result.extractions,
     provider: result.provider,
-    lowConfidenceFields: result.lowConfidenceFields,
-    warning: result.warning,
+    lowConfidenceFieldsList: result.lowConfidenceFieldsList,
+    warnings: result.warnings,
   });
 });
 

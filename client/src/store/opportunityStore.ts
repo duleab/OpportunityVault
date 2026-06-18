@@ -4,30 +4,49 @@ import type { Opportunity, ExtractedData } from '../types/opportunity.types';
 interface OpportunityState {
   opportunities: Opportunity[];
   selected: Opportunity | null;
-  extraction: ExtractedData | null;
+  extractions: ExtractedData[];
   rawText: string;
-  lowConfidenceFields: string[];
-  extractionWarning: string | null;
+  lowConfidenceFieldsList: string[][];
+  extractionWarnings: (string | null)[];
   setOpportunities: (items: Opportunity[]) => void;
   setSelected: (item: Opportunity | null) => void;
-  setExtraction: (data: ExtractedData | null, rawText?: string) => void;
-  setLowConfidence: (fields: string[], warning: string | null) => void;
-  clearExtraction: () => void;
+  setExtractions: (data: ExtractedData[], rawText?: string) => void;
+  updateExtraction: (index: number, data: ExtractedData) => void;
+  removeExtraction: (index: number) => void;
+  setLowConfidenceList: (fieldsList: string[][], warnings: (string | null)[]) => void;
+  clearExtractions: () => void;
 }
 
 export const useOpportunityStore = create<OpportunityState>((set) => ({
   opportunities: [],
   selected: null,
-  extraction: null,
+  extractions: [],
   rawText: '',
-  lowConfidenceFields: [],
-  extractionWarning: null,
+  lowConfidenceFieldsList: [],
+  extractionWarnings: [],
   setOpportunities: (items) => set({ opportunities: items }),
   setSelected: (item) => set({ selected: item }),
-  setExtraction: (data, rawText) =>
-    set((s) => ({ extraction: data, rawText: rawText ?? s.rawText })),
-  setLowConfidence: (fields, warning) =>
-    set({ lowConfidenceFields: fields, extractionWarning: warning }),
-  clearExtraction: () =>
-    set({ extraction: null, rawText: '', lowConfidenceFields: [], extractionWarning: null }),
+  setExtractions: (data, rawText) =>
+    set((s) => ({ extractions: data, rawText: rawText ?? s.rawText })),
+  updateExtraction: (index, data) =>
+    set((s) => {
+      const newExtractions = [...s.extractions];
+      newExtractions[index] = data;
+      return { extractions: newExtractions };
+    }),
+  removeExtraction: (index) =>
+    set((s) => {
+      const newExtractions = [...s.extractions];
+      newExtractions.splice(index, 1);
+      const newWarnings = [...s.extractionWarnings];
+      newWarnings.splice(index, 1);
+      const newLowConf = [...s.lowConfidenceFieldsList];
+      newLowConf.splice(index, 1);
+      return { extractions: newExtractions, extractionWarnings: newWarnings, lowConfidenceFieldsList: newLowConf };
+    }),
+  setLowConfidenceList: (fieldsList, warnings) =>
+    set({ lowConfidenceFieldsList: fieldsList, extractionWarnings: warnings }),
+  clearExtractions: () =>
+    set({ extractions: [], rawText: '', lowConfidenceFieldsList: [], extractionWarnings: [] }),
 }));
+

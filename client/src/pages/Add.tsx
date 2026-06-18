@@ -11,37 +11,41 @@ import { ExtractionLoading } from '../components/paste/ExtractionLoading';
 import { ExtractionPreview } from '../components/paste/ExtractionPreview';
 import { Select } from '../components/ui/Select';
 import { Button } from '../components/ui/Button';
-import type { ExtractedData } from '../types/opportunity.types';
 
 export function Add() {
   const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const { aiProvider, setAiProvider } = useSettingsStore();
   const {
-    extraction, rawText, lowConfidenceFields, extractionWarning,
-    setExtraction, clearExtraction,
+    extractions, rawText, lowConfidenceFieldsList, extractionWarnings,
+    updateExtraction, removeExtraction, clearExtractions
   } = useOpportunityStore();
   const [text, setText] = useState(rawText);
   const { loading, extract } = useExtraction();
-  const [saving, setSaving] = useState(false);
+  const [savingIndex, setSavingIndex] = useState<number | null>(null);
 
   const handleExtract = async () => {
     const result = await extract(text, aiProvider);
     if (result) setText(text);
   };
 
-  const handleSave = async (data: ExtractedData) => {
+  const handleSave = async (index: number) => {
     if (!accessToken) return;
-    setSaving(true);
+    const data = extractions[index];
+    setSavingIndex(index);
     try {
-      const res = await saveExtracted(accessToken, data, text);
+      await saveExtracted(accessToken, data, text);
       toast.success('Saved to vault!');
-      clearExtraction();
-      navigate(`/opportunities/${res.opportunity.id}`);
+      removeExtraction(index);
+      // If none left, clear and redirect to dashboard
+      if (extractions.length === 1) {
+        clearExtractions();
+        navigate('/');
+      }
     } catch {
       toast.error('Save failed');
     } finally {
-      setSaving(false);
+      setSavingIndex(null);
     }
   };
 
@@ -59,19 +63,28 @@ export function Add() {
           Extract with AI →
         </Button>
       </div>
-      <div>
+      <div className="space-y-6">
         {loading && <ExtractionLoading />}
-        {!loading && extraction && (
-          <ExtractionPreview
-            data={extraction}
-            lowConfidenceFields={lowConfidenceFields}
-            warning={extractionWarning}
-            onChange={(d) => setExtraction(d)}
-            onSave={() => !saving && handleSave(extraction)}
-            onDiscard={clearExtraction}
-          />
+        {!loading && extractions.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Extracted Opportunities ({extractions.length})</h2>
+              <Button variant="ghost" onClick={clearExtractions}>Clear All</Button>
+            </div>
+            {extractions.map((extraction, idx) => (
+              <ExtractionPreview
+                key={idx}
+                data={extraction}
+                lowConfidenceFields={lowConfidenceFieldsList[idx] || []}
+                warning={extractionWarnings[idx]}
+                onChange={(d) => updateExtraction(idx, d)}
+                onSave={() => savingIndex !== idx && handleSave(idx)}
+                onDiscard={() => removeExtraction(idx)}
+              />
+            ))}
+          </div>
         )}
-        {!loading && !extraction && (
+        {!loading && extractions.length === 0 && (
           <div className="flex h-full min-h-[300px] items-center justify-center rounded-xl border border-dashed border-white/10 text-gray-500">
             Extracted fields will appear here
           </div>

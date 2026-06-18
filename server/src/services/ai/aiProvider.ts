@@ -2,7 +2,7 @@ import type { ExtractedData } from '../../types/index.js';
 
 export interface AIExtractor {
   name: string;
-  extract(rawText: string): Promise<ExtractedData>;
+  extract(rawText: string): Promise<ExtractedData[]>;
 }
 
 export const AI_TIMEOUT_MS = 30_000;
@@ -20,8 +20,18 @@ export async function withTimeout<T>(promise: Promise<T>, ms: number = AI_TIMEOU
   }
 }
 
-export function parseExtractedJson(content: string): ExtractedData {
+export function parseExtractedJson(content: string): ExtractedData[] {
   const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const parsed = JSON.parse(cleaned) as ExtractedData;
-  return parsed;
+  const parsed = JSON.parse(cleaned);
+  
+  if (parsed.opportunities && Array.isArray(parsed.opportunities)) {
+    return parsed.opportunities as ExtractedData[];
+  }
+  
+  // Fallback if the AI just returned a single object or an array directly
+  if (Array.isArray(parsed)) {
+    return parsed as ExtractedData[];
+  }
+  
+  return [parsed as ExtractedData];
 }

@@ -97,7 +97,12 @@ export function postProcessExtraction(data: ExtractedData, rawText: string): {
 export async function extractWithFallback(
   rawText: string,
   preferredProvider?: string
-): Promise<{ extracted: ExtractedData; provider: string; lowConfidenceFields: string[]; warning: string | null }> {
+): Promise<{
+  extractions: ExtractedData[];
+  provider: string;
+  lowConfidenceFieldsList: string[][];
+  warnings: (string | null)[];
+}> {
   const chain = preferredProvider
     ? [preferredProvider, ...FALLBACK_CHAIN.filter((p) => p !== preferredProvider)]
     : [...FALLBACK_CHAIN];
@@ -109,9 +114,20 @@ export async function extractWithFallback(
     if (!extractor) continue;
 
     try {
-      const raw = await extractor.extract(rawText);
-      const { extracted, lowConfidenceFields, warning } = postProcessExtraction(raw, rawText);
-      return { extracted, provider: providerName, lowConfidenceFields, warning };
+      const rawArray = await extractor.extract(rawText);
+      
+      const extractions: ExtractedData[] = [];
+      const lowConfidenceFieldsList: string[][] = [];
+      const warnings: (string | null)[] = [];
+
+      for (const raw of rawArray) {
+        const { extracted, lowConfidenceFields, warning } = postProcessExtraction(raw, rawText);
+        extractions.push(extracted);
+        lowConfidenceFieldsList.push(lowConfidenceFields);
+        warnings.push(warning);
+      }
+
+      return { extractions, provider: providerName, lowConfidenceFieldsList, warnings };
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
     }

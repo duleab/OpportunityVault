@@ -111,11 +111,10 @@ export interface StatsOverview {
 }
 
 export interface ExtractionResult {
-  extracted: ExtractedData;
-  confidence: number;
+  extractions: ExtractedData[];
   provider: string;
-  lowConfidenceFields: string[];
-  warning: string | null;
+  lowConfidenceFieldsList: string[][];
+  warnings: (string | null)[];
 }
 
 export const OPPORTUNITY_TYPES: OpportunityType[] = [

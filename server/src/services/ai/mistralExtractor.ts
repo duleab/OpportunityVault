@@ -8,7 +8,7 @@ const MISTRAL_ENDPOINT = 'https://api.mistral.ai/v1/chat/completions';
 
 export const mistralExtractor: AIExtractor = {
   name: 'mistral',
-  async extract(rawText: string): Promise<ExtractedData> {
+  async extract(rawText: string): Promise<ExtractedData[]> {
     return withTimeout(
       (async () => {
         const response = await axios.post(

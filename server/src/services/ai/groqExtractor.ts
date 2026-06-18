@@ -8,7 +8,7 @@ const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
 export const groqExtractor: AIExtractor = {
   name: 'groq',
-  async extract(rawText: string): Promise<ExtractedData> {
+  async extract(rawText: string): Promise<ExtractedData[]> {
     return withTimeout(
       (async () => {
         const response = await axios.post(

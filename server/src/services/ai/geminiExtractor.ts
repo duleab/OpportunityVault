@@ -9,7 +9,7 @@ const GEMINI_ENDPOINT =
 
 export const geminiExtractor: AIExtractor = {
   name: 'gemini',
-  async extract(rawText: string): Promise<ExtractedData> {
+  async extract(rawText: string): Promise<ExtractedData[]> {
     return withTimeout(
       (async () => {
         const response = await axios.post(
