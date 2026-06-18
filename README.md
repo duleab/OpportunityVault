@@ -43,10 +43,17 @@ cp .env.example server/.env
 cp .env.example client/.env
 ```
 
-Edit `server/.env`:
+Start PostgreSQL (matches production):
+
+```bash
+docker-compose up -d
+```
+
+Edit `server/.env` — defaults in `.env.example` work with docker-compose:
 
 ```env
-DATABASE_URL=file:./dev.db
+DATABASE_URL=postgresql://opportunityvault:opportunityvault@localhost:5432/opportunityvault
+DIRECT_URL=postgresql://opportunityvault:opportunityvault@localhost:5432/opportunityvault
 JWT_ACCESS_SECRET=your_secret_min_32_chars_here
 JWT_REFRESH_SECRET=your_refresh_secret_min_32_chars
 GROQ_API_KEY=your_groq_key
@@ -58,7 +65,7 @@ CLIENT_URL=http://localhost:5173
 
 ```bash
 cd server
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 npx prisma generate
 ```
 
@@ -79,7 +86,8 @@ npm run dev
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | `file:./dev.db` (SQLite) or PostgreSQL connection string |
+| `DATABASE_URL` | PostgreSQL connection string (pooled in production) |
+| `DIRECT_URL` | Direct PostgreSQL URL for migrations (same as DATABASE_URL locally) |
 | `JWT_ACCESS_SECRET` | Secret for access tokens |
 | `JWT_REFRESH_SECRET` | Secret for refresh tokens |
 | `JWT_ACCESS_EXPIRES` | Default: `15m` |
@@ -121,23 +129,15 @@ docker run -p 80:80 -v /var/cache/ntfy:/var/cache/ntfy \
   -v /etc/ntfy:/etc/ntfy binwiederhier/ntfy serve
 ```
 
-## PostgreSQL (Optional)
+## PostgreSQL (Local)
 
 ```bash
 docker-compose up -d
 ```
 
-Update `server/.env`:
+Uses credentials from `.env.example`. See [DEPLOYMENT.md](./DEPLOYMENT.md) for production Supabase setup.
 
-```env
-DATABASE_URL=postgresql://opportunityvault:opportunityvault@localhost:5432/opportunityvault
-```
-
-Change `provider` in `server/prisma/schema.prisma` to `postgresql`, then:
-
-```bash
-npx prisma migrate dev
-```
+For SQLite quick dev without Docker, see the optional section in [DEPLOYMENT.md](./DEPLOYMENT.md#sqlite-quick-dev-optional).
 
 ## API Endpoints
 
@@ -162,24 +162,16 @@ npx prisma migrate dev
 
 ## Deployment
 
-### Option A: Vercel + Render + Supabase
+**Full production guide:** [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-1. **Supabase** — Create project, copy `DATABASE_URL`, run `npx prisma migrate deploy`
-2. **Render** — Deploy server with build: `npm install && npx prisma generate && npm run build`, start: `npm start`
-3. **Vercel** — Deploy client with `VITE_API_URL=https://your-api.onrender.com/api`
+Architecture: **Vercel** (frontend) → **Render** (API + cron) → **Supabase** (PostgreSQL)
 
-### Option B: Fly.io
+Quick overview:
 
-```bash
-fly launch
-fly deploy
-```
-
-### Option C: Railway
-
-Connect GitHub repo; add PostgreSQL plugin; set env vars.
-
-**Tip:** Use [UptimeRobot](https://uptimerobot.com) to ping Render every 10 min (free tier sleeps after 15 min).
+1. **Supabase** — Create project, copy pooled + direct connection strings
+2. **Render** — Deploy from `render.yaml`, set env vars (see DEPLOYMENT.md)
+3. **Vercel** — Import repo, set `VITE_API_URL=https://your-api.onrender.com/api`
+4. **UptimeRobot** — Ping `/api/health` every 5 min to prevent Render sleep
 
 ## Notion Export
 
@@ -195,6 +187,9 @@ opportunityvault/
 ├── client/          # React frontend
 ├── server/          # Express API
 ├── docker-compose.yml
+├── render.yaml      # Render Blueprint
+├── vercel.json      # Vercel SPA config
+├── DEPLOYMENT.md    # Production deployment guide
 ├── .env.example
 └── README.md
 ```
