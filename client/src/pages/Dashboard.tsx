@@ -93,7 +93,7 @@ export function Dashboard() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">
-            {getGreeting()}, {displayName} 👋
+            {getGreeting()}, {displayName}
           </h1>
           <p className="mt-1 text-sm text-gray-400">
             Here's what's happening with your opportunities today.
