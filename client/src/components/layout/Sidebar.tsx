@@ -2,10 +2,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
   LayoutDashboard, Briefcase, Plus, Settings, LogOut,
-  Search, AlertCircle, Calendar, FileText, CheckCircle, XCircle
+  Search, AlertCircle, Calendar, FileText, CheckCircle, XCircle,
+  Moon, Sun
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useOpportunityStore } from '../../store/opportunityStore';
+import { useSettingsStore } from '../../store/settingsStore';
 
 const navLinks = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -108,6 +110,23 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
+
+      {/* Theme Toggle */}
+      <div className="px-5 mt-auto pb-4">
+        <button
+          onClick={() => useSettingsStore.getState().toggleTheme()}
+          className="flex w-full items-center justify-between rounded-lg bg-surface-2 p-1 border border-white/[0.06]"
+        >
+          <div className={`flex w-1/2 items-center justify-center gap-1.5 rounded-md py-1.5 transition ${useSettingsStore((s) => s.theme) === 'dark' ? 'bg-surface-3 shadow-sm text-white' : 'text-gray-500 hover:text-white'}`}>
+            <Moon className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-medium">Dark</span>
+          </div>
+          <div className={`flex w-1/2 items-center justify-center gap-1.5 rounded-md py-1.5 transition ${useSettingsStore((s) => s.theme) === 'light' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-white'}`}>
+            <Sun className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-medium">Light</span>
+          </div>
+        </button>
+      </div>
 
       {/* User Profile */}
       <div className="border-t border-white/[0.06] p-3">
