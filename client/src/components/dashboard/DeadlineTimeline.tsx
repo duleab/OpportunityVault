@@ -1,32 +1,93 @@
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import type { Opportunity } from '../../types/opportunity.types';
 
-interface DeadlineTimelineProps {
+interface UpcomingDeadlinesProps {
   items: Opportunity[];
 }
 
-export function DeadlineTimeline({ items }: DeadlineTimelineProps) {
+function urgencyBadge(daysLeft: number | null) {
+  if (daysLeft === null) return null;
+  if (daysLeft <= 2) return <span className="rounded-md bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-300 border border-red-500/30">Critical</span>;
+  if (daysLeft <= 7) return <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300 border border-amber-500/30">High</span>;
+  if (daysLeft <= 30) return <span className="rounded-md bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-400 border border-yellow-500/20">Medium</span>;
+  return <span className="rounded-md bg-gray-500/10 px-2 py-0.5 text-xs font-medium text-gray-400 border border-gray-500/20">Low</span>;
+}
+
+function daysColor(daysLeft: number | null) {
+  if (daysLeft === null) return 'text-gray-400';
+  if (daysLeft <= 2) return 'text-red-400';
+  if (daysLeft <= 7) return 'text-amber-400';
+  if (daysLeft <= 30) return 'text-yellow-400';
+  return 'text-gray-400';
+}
+
+function OrgAvatar({ name }: { name: string | null }) {
+  const initials = name ? name.slice(0, 2).toUpperCase() : '??';
+  const colors = ['bg-violet-500', 'bg-blue-500', 'bg-green-500', 'bg-amber-500', 'bg-red-500', 'bg-pink-500', 'bg-cyan-500'];
+  const idx = (name ?? '').charCodeAt(0) % colors.length;
+  return (
+    <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${colors[idx]} text-white text-[10px] font-bold`}>
+      {initials}
+    </div>
+  );
+}
+
+export function UpcomingDeadlines({ items }: UpcomingDeadlinesProps) {
   if (items.length === 0) {
-    return <p className="text-sm text-gray-500">No upcoming deadlines in the next 30 days.</p>;
+    return <p className="text-sm text-gray-500 py-4">No upcoming deadlines.</p>;
   }
 
   return (
-    <div className="relative pl-6">
-      <div className="absolute bottom-0 left-2 top-0 w-px bg-white/10" />
-      {items.map((opp) => (
-        <Link
-          key={opp.id}
-          to={`/opportunities/${opp.id}`}
-          className="relative mb-4 block rounded-lg border border-white/5 bg-base/50 p-3 pl-4 transition hover:border-accent/30"
-        >
-          <div className="absolute -left-[17px] top-4 h-3 w-3 rounded-full border-2 border-accent bg-base" />
-          <p className="font-medium text-white">{opp.name}</p>
-          <p className="font-mono text-xs text-gray-400">
-            {opp.deadline ? format(new Date(opp.deadline), 'MMM d, yyyy') : 'TBD'}
-          </p>
+    <div className="card">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-white">Upcoming Deadlines</h3>
+          <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-300 border border-red-500/20">
+            {items.filter(o => o.urgency?.isUrgent).length} urgent
+          </span>
+        </div>
+        <Link to="/opportunities" className="text-xs text-accent hover:underline">View all</Link>
+      </div>
+
+      {/* List */}
+      <div className="divide-y divide-white/[0.05]">
+        {items.slice(0, 6).map((opp) => {
+          const daysLeft = opp.deadline ? differenceInDays(new Date(opp.deadline), new Date()) : null;
+          return (
+            <Link
+              key={opp.id}
+              to={`/opportunities/${opp.id}`}
+              className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.03] transition"
+            >
+              <OrgAvatar name={opp.organization ?? opp.name} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-white truncate">{opp.name}</p>
+                <p className="text-[11px] text-gray-500 truncate">{opp.organization ?? '—'}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <span className={`font-mono text-xs font-medium ${daysColor(daysLeft)}`}>
+                  {daysLeft !== null ? (daysLeft === 0 ? 'Today!' : `${daysLeft} days left`) : '—'}
+                </span>
+                <span className="text-[10px] text-gray-600">
+                  {opp.deadline ? format(new Date(opp.deadline), 'dd MMM yyyy') : 'No date'}
+                </span>
+              </div>
+              <div className="ml-2 flex-shrink-0">
+                {urgencyBadge(daysLeft)}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-white/[0.05] px-5 py-3">
+        <Link to="/opportunities" className="text-xs text-gray-500 hover:text-accent transition flex items-center gap-1">
+          View all upcoming deadlines →
         </Link>
-      ))}
+      </div>
     </div>
   );
 }

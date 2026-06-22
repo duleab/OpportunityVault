@@ -1,4 +1,4 @@
-import { formatRelative } from '../../utils/deadlineUtils';
+import { formatDistanceToNow } from 'date-fns';
 
 interface ActivityItem {
   id: string;
@@ -16,13 +16,15 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
   }
 
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-2">
       {items.map((item) => (
-        <li key={item.id} className="flex items-start gap-3 text-sm">
-          <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-accent" />
-          <div>
-            <p className="text-gray-300">{item.message}</p>
-            <p className="text-xs text-gray-500">{formatRelative(item.timestamp)}</p>
+        <li key={item.id} className="flex items-start gap-3 rounded-lg p-3 hover:bg-white/[0.03] transition">
+          <div className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-300 truncate">{item.message}</p>
+            <p className="text-[11px] text-gray-600 mt-0.5">
+              {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+            </p>
           </div>
         </li>
       ))}
