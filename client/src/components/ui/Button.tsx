@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -8,23 +8,24 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent hover:bg-accent/90 text-white',
-  secondary: 'bg-surface border border-white/10 hover:border-white/20 text-white',
-  ghost: 'hover:bg-white/5 text-gray-300',
-  danger: 'bg-danger/20 hover:bg-danger/30 text-red-300',
+  primary:   'bg-accent text-white hover:bg-accent-hover border border-accent hover:border-accent-hover',
+  secondary: 'bg-white text-gray-700 border border-[#e5e7eb] hover:bg-[#f5f5f5] hover:border-[#d1d5db]',
+  ghost:     'bg-transparent text-[#6b7280] hover:bg-[#f5f5f5] hover:text-[#111827] border border-transparent',
+  danger:    'bg-[#dc2626] text-white hover:bg-[#b91c1c] border border-[#dc2626]',
+  outline:   'bg-white text-accent border border-accent hover:bg-[#eff6ff]',
 };
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-6 py-3 text-base',
+  sm: 'px-3 py-1.5 text-xs font-medium rounded',
+  md: 'px-4 py-2 text-sm font-medium rounded',
+  lg: 'px-6 py-2.5 text-sm font-semibold rounded',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', className = '', children, ...props }, ref) => (
     <button
       ref={ref}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}

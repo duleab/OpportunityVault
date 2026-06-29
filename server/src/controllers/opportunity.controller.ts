@@ -66,6 +66,48 @@ export const extractPreview = asyncHandler(async (req: AuthRequest, res: Respons
   });
 });
 
+export const checkDuplicate = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const name = String(req.query.name ?? '').trim().toLowerCase();
+  if (!name) {
+    res.json({ found: false });
+    return;
+  }
+
+  const rows = await prisma.opportunity.findMany({ where: { userId } });
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+  const target = normalize(name);
+
+  let bestMatch: { id: string; name: string; status: string; createdAt: Date; score: number } | null = null;
+
+  for (const row of rows) {
+    const rowNorm = normalize(row.name);
+    // Exact match
+    if (rowNorm === target) {
+      bestMatch = { id: row.id, name: row.name, status: row.status, createdAt: row.createdAt, score: 1 };
+      break;
+    }
+    // Contains match
+    if (rowNorm.includes(target) || target.includes(rowNorm)) {
+      const score = Math.min(rowNorm.length, target.length) / Math.max(rowNorm.length, target.length);
+      if (!bestMatch || score > bestMatch.score) {
+        bestMatch = { id: row.id, name: row.name, status: row.status, createdAt: row.createdAt, score };
+      }
+    }
+  }
+
+  const threshold = 0.75;
+  if (bestMatch && bestMatch.score >= threshold) {
+    res.json({
+      found: true,
+      match: { id: bestMatch.id, name: bestMatch.name, status: bestMatch.status, createdAt: bestMatch.createdAt },
+    });
+    return;
+  }
+  res.json({ found: false });
+});
+
+
 export const saveExtracted = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const { extracted, rawText, userEdits } = req.body as {

@@ -6,10 +6,11 @@ import { patchSettings, testExtraction } from '../../services/authService';
 import { Button } from '../ui/Button';
 
 const PROVIDERS = [
-  { id: 'groq', label: 'Groq (Llama 3.3 70B)', desc: 'Fastest, Free' },
-  { id: 'gemini', label: 'Google Gemini 1.5 Flash', desc: 'Free tier' },
-  { id: 'mistral', label: 'Mistral Small', desc: 'Free tier' },
-  { id: 'ollama', label: 'Ollama (Local)', desc: 'No API key needed' },
+  { id: 'groq',    label: 'Groq (Llama 3.3 70B)',    desc: 'Fastest • Free tier',  env: 'GROQ_API_KEY'   },
+  { id: 'zhipu',   label: 'Z.ai GLM-4 Flash',         desc: 'ZhipuAI • Fast',       env: 'ZHIPU_API_KEY'  },
+  { id: 'gemini',  label: 'Google Gemini 1.5 Flash',  desc: 'Google • Free tier',   env: 'GEMINI_API_KEY' },
+  { id: 'mistral', label: 'Mistral Small',             desc: 'Mistral AI • Free',    env: 'MISTRAL_API_KEY'},
+  { id: 'ollama',  label: 'Ollama (Local)',             desc: 'Self-hosted • No key', env: 'OLLAMA_BASE_URL' },
 ];
 
 export function AIProviderSettings() {
@@ -36,40 +37,59 @@ export function AIProviderSettings() {
       await testExtraction(accessToken, aiProvider);
       toast.success('Test extraction succeeded!');
     } catch {
-      toast.error('Test extraction failed — check API keys');
+      toast.error('Test failed — check API key for this provider');
     } finally {
       setTesting(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      {PROVIDERS.map((p) => (
-        <label
-          key={p.id}
-          className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${
-            aiProvider === p.id ? 'border-accent bg-accent/10' : 'border-white/10'
-          }`}
-        >
-          <input
-            type="radio"
-            name="provider"
-            checked={aiProvider === p.id}
-            onChange={() => save(p.id)}
-            className="mt-1"
-          />
-          <div>
-            <p className="font-medium text-white">{p.label}</p>
-            <p className="text-sm text-gray-400">{p.desc}</p>
-          </div>
-        </label>
-      ))}
-      <p className="text-sm text-gray-500">
-        API keys are configured server-side via environment variables (GROQ_API_KEY, GEMINI_API_KEY, etc.)
-      </p>
-      <Button variant="secondary" onClick={test} disabled={testing}>
-        {testing ? 'Testing...' : 'Test Extraction'}
-      </Button>
+    <div className="space-y-5">
+      <div>
+        <h3 className="text-sm font-semibold text-[#111827] mb-1">Select AI Provider</h3>
+        <p className="text-xs text-[#9ca3af]">
+          API keys are set server-side via environment variables. The fallback chain tries each provider in order if one fails.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {PROVIDERS.map((p) => (
+          <label
+            key={p.id}
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+              aiProvider === p.id
+                ? 'border-accent bg-[#eff6ff]'
+                : 'border-[#e5e7eb] bg-white hover:border-[#d1d5db] hover:bg-[#f9fafb]'
+            }`}
+          >
+            <input
+              type="radio"
+              name="provider"
+              checked={aiProvider === p.id}
+              onChange={() => save(p.id)}
+              className="mt-0.5 accent-accent"
+            />
+            <div className="flex-1">
+              <p className={`text-sm font-semibold ${aiProvider === p.id ? 'text-accent' : 'text-[#111827]'}`}>
+                {p.label}
+              </p>
+              <p className="text-xs text-[#9ca3af] mt-0.5">{p.desc}</p>
+            </div>
+            <code className="text-[10px] text-[#9ca3af] font-mono bg-[#f3f4f6] px-2 py-0.5 rounded">
+              {p.env}
+            </code>
+          </label>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3 pt-1">
+        <Button variant="secondary" size="sm" onClick={test} disabled={testing}>
+          {testing ? 'Testing…' : 'Test current provider'}
+        </Button>
+        <p className="text-xs text-[#9ca3af]">
+          Sends a small test extraction to verify the provider is working.
+        </p>
+      </div>
     </div>
   );
 }

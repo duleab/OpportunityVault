@@ -120,3 +120,11 @@ export async function exportFromServer(
   if (format === 'notion') return res.json() as Promise<{ success: number; failed: number }>;
   return res.blob();
 }
+
+export async function checkDuplicate(
+  token: string,
+  name: string
+): Promise<{ found: boolean; match?: { id: string; name: string; status: string; createdAt: string } }> {
+  return apiRequest(`/opportunities/check-duplicate?name=${encodeURIComponent(name)}`, { token });
+}
+

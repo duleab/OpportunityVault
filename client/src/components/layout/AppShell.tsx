@@ -4,13 +4,25 @@ import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { useAuthStore } from '../../store/authStore';
 
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#fafafa]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-white font-bold text-sm">
+          OV
+        </div>
+        <p className="text-sm text-[#9ca3af]">Loading…</p>
+      </div>
+    </div>
+  );
+}
+
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const refresh = useAuthStore((s) => s.refresh);
   const navigate = useNavigate();
-  // Only run refresh ONCE on initial mount — prevents logout on navigation
   const didRefresh = useRef(false);
 
   useEffect(() => {
@@ -30,31 +42,22 @@ export function AppShell() {
     return () => window.removeEventListener('keydown', handler);
   }, [navigate]);
 
-  if (!authReady) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-base">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white font-bold shadow-glow animate-pulse">
-            OV
-          </div>
-          <p className="text-sm text-gray-500">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  if (!authReady) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
-    <div className="flex min-h-screen bg-base">
+    <div className="flex min-h-screen bg-[#fafafa]">
       {/* Desktop Sidebar */}
       <Sidebar />
 
       {/* Mobile overlay sidebar */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="absolute inset-y-0 left-0 w-60 bg-sidebar-bg z-50" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute inset-0 bg-[#111827]/30" />
+          <div
+            className="absolute inset-y-0 left-0 w-60 bg-white border-r border-[#e5e7eb] z-50 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Sidebar />
           </div>
         </div>

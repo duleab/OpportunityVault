@@ -18,6 +18,7 @@ export const env = {
   geminiApiKey: process.env.GEMINI_API_KEY ?? '',
   mistralApiKey: process.env.MISTRAL_API_KEY ?? '',
   ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434',
+  zhipuApiKey: process.env.ZHIPU_API_KEY ?? '',
   ntfyDefaultServer: process.env.NTFY_DEFAULT_SERVER ?? 'https://ntfy.sh',
   notionApiKey: process.env.NOTION_API_KEY ?? '',
 };

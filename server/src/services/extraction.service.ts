@@ -6,6 +6,7 @@ import { geminiExtractor } from './ai/geminiExtractor.js';
 import { groqExtractor } from './ai/groqExtractor.js';
 import { mistralExtractor } from './ai/mistralExtractor.js';
 import { ollamaExtractor } from './ai/ollamaExtractor.js';
+import { zhipuExtractor } from './ai/zhipuExtractor.js';
 import type { AIExtractor } from './ai/aiProvider.js';
 
 const VALID_TYPES = new Set<string>(Object.values(OpportunityType));
@@ -15,9 +16,10 @@ const extractors: Record<string, AIExtractor> = {
   gemini: geminiExtractor,
   mistral: mistralExtractor,
   ollama: ollamaExtractor,
+  zhipu: zhipuExtractor,
 };
 
-const FALLBACK_CHAIN = ['groq', 'gemini', 'mistral', 'ollama'] as const;
+const FALLBACK_CHAIN = ['groq', 'zhipu', 'gemini', 'mistral', 'ollama'] as const;
 
 function isValidUrl(url: string | null): boolean {
   if (!url) return false;
