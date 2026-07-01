@@ -78,14 +78,14 @@ export function UpcomingDeadlines({ items }: { items: Opportunity[] }) {
                 <p className="text-[11px] text-[#9ca3af] truncate">{opp.organization ?? '—'}</p>
               </div>
               <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                <span className={`text-xs ${daysColor(daysLeft)}`}>
-                  {daysText(daysLeft)}
+                <span className={`text-xs ${['applied', 'accepted'].includes(opp.urgency?.level) ? 'text-emerald-600 font-semibold' : ['rejected', 'withdrawn', 'skipped'].includes(opp.urgency?.level) ? 'text-gray-500 font-medium' : daysColor(daysLeft)}`}>
+                  {opp.urgency?.label || daysText(daysLeft)}
                 </span>
                 <span className="text-[10px] text-[#9ca3af]">
                   {opp.deadline ? format(new Date(opp.deadline), 'dd MMM yyyy') : '—'}
                 </span>
               </div>
-              <span className={`ml-1 h-2 w-2 flex-shrink-0 rounded-full ${urgencyDot(daysLeft)}`} />
+              <span className={`ml-1 h-2 w-2 flex-shrink-0 rounded-full ${['applied', 'accepted'].includes(opp.urgency?.level) ? 'bg-emerald-500' : ['rejected', 'withdrawn', 'skipped'].includes(opp.urgency?.level) ? 'bg-gray-400' : urgencyDot(daysLeft)}`} />
             </Link>
           );
         })}

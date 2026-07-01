@@ -23,9 +23,14 @@ const URGENCY_BORDER: Record<string, string> = {
   critical: 'border-l-red-500',
   high: 'border-l-amber-500',
   medium: 'border-l-yellow-500',
-  low: 'border-l-gray-700',
-  none: 'border-l-gray-800',
-  expired: 'border-l-gray-600',
+  low: 'border-l-gray-300',
+  none: 'border-l-gray-300',
+  expired: 'border-l-gray-400',
+  applied: 'border-l-emerald-500',
+  accepted: 'border-l-green-500',
+  rejected: 'border-l-red-300',
+  withdrawn: 'border-l-gray-300',
+  skipped: 'border-l-gray-300',
 };
 
 interface OpportunityCardProps {
@@ -76,7 +81,11 @@ export function OpportunityCard({ opportunity: opp, onStatusChange }: Opportunit
       {/* Deadline row */}
       <div className="flex items-center justify-between text-xs">
         <div>
-          {opp.deadline ? (
+          {['APPLIED', 'ACCEPTED', 'REJECTED', 'WITHDRAWN', 'SKIPPED'].includes(opp.status) ? (
+            <span className={`font-medium ${opp.status === 'APPLIED' || opp.status === 'ACCEPTED' ? 'text-emerald-600' : 'text-gray-500'}`}>
+              {opp.urgency?.label || opp.status}
+            </span>
+          ) : opp.deadline ? (
             <div>
               <span className={`font-mono ${deadlineColor}`}>
                 {daysLeft !== null && daysLeft >= 0 ? `${daysLeft}d left` : daysLeft !== null && daysLeft < 0 ? 'Expired' : ''}

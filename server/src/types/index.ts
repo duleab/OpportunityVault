@@ -1,7 +1,7 @@
 import type { AppStatus, OpportunityType } from '@prisma/client';
 
 export interface UrgencyInfo {
-  level: 'none' | 'expired' | 'critical' | 'high' | 'medium' | 'low';
+  level: 'none' | 'expired' | 'critical' | 'high' | 'medium' | 'low' | 'applied' | 'accepted' | 'rejected' | 'withdrawn' | 'skipped';
   daysLeft: number | null;
   label: string;
   color: string;

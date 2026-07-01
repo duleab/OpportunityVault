@@ -1,7 +1,27 @@
 import { differenceInDays } from 'date-fns';
 import type { UrgencyInfo } from '../types/index.js';
 
-export function calculateUrgency(deadline: Date | null): UrgencyInfo {
+export function calculateUrgency(deadline: Date | null, status?: string): UrgencyInfo {
+  const s = status ? String(status).trim().toUpperCase() : '';
+  if (s === 'APPLIED') {
+    return { level: 'applied', daysLeft: null, label: 'Applied ✓', color: 'green', isUrgent: false };
+  }
+  if (s === 'ACCEPTED') {
+    return { level: 'accepted', daysLeft: null, label: 'Accepted 🎉', color: 'green', isUrgent: false };
+  }
+  if (s === 'REJECTED') {
+    return { level: 'rejected', daysLeft: null, label: 'Rejected', color: 'gray', isUrgent: false };
+  }
+  if (s === 'WITHDRAWN') {
+    return { level: 'withdrawn', daysLeft: null, label: 'Withdrawn', color: 'gray', isUrgent: false };
+  }
+  if (s === 'SKIPPED') {
+    return { level: 'skipped', daysLeft: null, label: 'Skipped', color: 'gray', isUrgent: false };
+  }
+  if (s === 'EXPIRED') {
+    return { level: 'expired', daysLeft: null, label: 'Expired', color: 'red', isUrgent: false };
+  }
+
   if (!deadline) {
     return {
       level: 'none',
@@ -60,8 +80,7 @@ export function calculateUrgency(deadline: Date | null): UrgencyInfo {
   };
 }
 
-export function urgencyLevelFromDeadline(deadline: Date | null): string {
-  return calculateUrgency(deadline).level === 'none' || calculateUrgency(deadline).level === 'expired'
-    ? 'none'
-    : calculateUrgency(deadline).level;
+export function urgencyLevelFromDeadline(deadline: Date | null, status?: string): string {
+  const level = calculateUrgency(deadline, status).level;
+  return level === 'none' || level === 'expired' ? 'none' : level;
 }

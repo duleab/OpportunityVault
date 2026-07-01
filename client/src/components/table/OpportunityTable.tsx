@@ -78,8 +78,13 @@ export function OpportunityTable({
           medium: 'bg-warning/20 text-warning',
           low: 'bg-gray-100 text-gray-600',
           expired: 'bg-danger/20 text-red-600',
+          applied: 'bg-emerald-100 text-emerald-800 font-medium',
+          accepted: 'bg-green-100 text-green-800 font-medium',
+          rejected: 'bg-red-100 text-red-700 font-medium',
+          withdrawn: 'bg-gray-100 text-gray-600 font-medium',
+          skipped: 'bg-gray-100 text-gray-600 font-medium',
         };
-        return <Badge className={colors[u.level] ?? ''}>{u.label}</Badge>;
+        return <Badge className={colors[u.level] ?? 'bg-gray-100 text-gray-600'}>{u.label}</Badge>;
       },
     }),
     columnHelper.accessor('level', {

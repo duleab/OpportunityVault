@@ -44,7 +44,8 @@ function buildOpportunityData(
   const merged = { ...extracted, ...userEdits };
   const deadline = parseSafeDate(merged.deadline);
   const startDate = parseSafeDate(merged.startDate);
-  const urgency = calculateUrgency(deadline);
+  const status = String((merged as Record<string, unknown>).status ?? 'SAVED');
+  const urgency = calculateUrgency(deadline, status);
 
   return {
     name: String(merged.name ?? 'Untitled Opportunity'),
@@ -72,7 +73,7 @@ function buildOpportunityData(
     languageReq: merged.languageReq ? String(merged.languageReq) : null,
     isUrgent: urgency.isUrgent,
     urgencyLevel: urgency.level,
-    status: 'SAVED' as AppStatus,
+    status: (status as AppStatus),
     rawText,
     aiExtractedData: JSON.stringify({ ...extracted, userEdits: userEdits ?? null }),
   };
@@ -256,6 +257,12 @@ export const updateOpportunity = asyncHandler(async (req: AuthRequest, res: Resp
   if (body.countries) updateData.countries = stringifyJsonArray(body.countries as string[]);
   if (body.requirements) updateData.requirements = stringifyJsonArray(body.requirements as string[]);
 
+  const newDeadline = 'deadline' in updateData ? (updateData.deadline as Date | null) : existing.deadline;
+  const newStatus = 'status' in updateData ? String(updateData.status) : existing.status;
+  const urgency = calculateUrgency(newDeadline, newStatus);
+  updateData.isUrgent = urgency.isUrgent;
+  updateData.urgencyLevel = urgency.level;
+
   const opp = await prisma.opportunity.update({
     where: { id: existing.id },
     data: updateData,
@@ -300,9 +307,14 @@ export const bulkStatus = asyncHandler(async (req: AuthRequest, res: Response) =
   const { ids, status } = req.body as { ids?: string[]; status?: AppStatus };
   if (!ids?.length || !status) throw new AppError(400, 'ids and status required');
 
+  const isSettled = ['APPLIED', 'ACCEPTED', 'REJECTED', 'WITHDRAWN', 'SKIPPED'].includes(status);
   await prisma.opportunity.updateMany({
     where: { id: { in: ids }, userId: req.user!.userId },
-    data: { status, ...(status === 'APPLIED' ? { appliedAt: new Date() } : {}) },
+    data: {
+      status,
+      ...(status === 'APPLIED' ? { appliedAt: new Date() } : {}),
+      ...(isSettled ? { isUrgent: false, urgencyLevel: status.toLowerCase() } : {}),
+    },
   });
 
   res.json({ message: 'Updated', count: ids.length });

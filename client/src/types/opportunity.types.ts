@@ -8,7 +8,7 @@ export type AppStatus =
   | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' | 'SKIPPED' | 'EXPIRED';
 
 export interface UrgencyInfo {
-  level: 'none' | 'expired' | 'critical' | 'high' | 'medium' | 'low';
+  level: 'none' | 'expired' | 'critical' | 'high' | 'medium' | 'low' | 'applied' | 'accepted' | 'rejected' | 'withdrawn' | 'skipped';
   daysLeft: number | null;
   label: string;
   color: string;

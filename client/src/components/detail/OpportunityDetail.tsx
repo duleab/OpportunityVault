@@ -48,9 +48,11 @@ export function OpportunityDetail({
           <h2 className="mt-2 font-display text-2xl font-bold text-[#111827]">{opp.name}</h2>
           {opp.organization && <p className="text-[#6b7280]">{opp.organization}</p>}
         </div>
-        {opp.deadline && opp.urgency.level !== 'expired' && (
+        {['applied', 'accepted', 'rejected', 'withdrawn', 'skipped'].includes(opp.urgency.level) ? (
+          <Badge className={opp.urgency.level === 'applied' || opp.urgency.level === 'accepted' ? 'bg-emerald-100 text-emerald-800 text-sm font-medium px-3 py-1' : 'bg-gray-100 text-gray-700 text-sm font-medium px-3 py-1'}>{opp.urgency.label}</Badge>
+        ) : opp.deadline && opp.urgency.level !== 'expired' ? (
           <CountdownTimer deadline={opp.deadline} />
-        )}
+        ) : null}
       </div>
 
       {editing ? (
