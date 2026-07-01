@@ -79,8 +79,8 @@ export function Detail() {
       const res = await updateOpportunity(accessToken, opp.id, data);
       setOpp(res.opportunity);
       toast.success('Saved');
-    } catch {
-      toast.error('Save failed');
+    } catch (err: any) {
+      toast.error(`Save failed: ${err?.message || 'Unknown error'}`);
     }
   };
 

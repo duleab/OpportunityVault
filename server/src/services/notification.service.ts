@@ -19,16 +19,20 @@ export interface SendNotificationParams {
 
 export async function sendNotification(params: SendNotificationParams): Promise<void> {
   const server = params.serverUrl || env.ntfyDefaultServer;
-  await axios.post(`${server}/${params.topic}`, params.message, {
-    headers: {
-      Title: params.title,
-      Priority: params.priority,
-      Tags: params.tags.join(','),
-      Click: params.clickUrl || '',
-      'Content-Type': 'text/plain',
-    },
-    timeout: 10000,
-  });
+  try {
+    await axios.post(`${server}/${params.topic}`, params.message, {
+      headers: {
+        Title: params.title,
+        Priority: params.priority,
+        Tags: params.tags.join(','),
+        Click: params.clickUrl || '',
+        'Content-Type': 'text/plain',
+      },
+      timeout: 10000,
+    });
+  } catch (err) {
+    console.warn('⚠️ Non-fatal: Failed to send ntfy notification:', err instanceof Error ? err.message : err);
+  }
 }
 
 export function buildDeadlineMessage(opp: Opportunity, daysLeft: number): string {

@@ -81,8 +81,8 @@ export function AddManual() {
 
       toast.success('✅ Opportunity added!');
       navigate('/opportunities');
-    } catch {
-      toast.error('Failed to save opportunity');
+    } catch (err: any) {
+      toast.error(`Failed to save: ${err?.message || 'Unknown error'}`);
     } finally {
       setSaving(false);
     }

@@ -82,8 +82,8 @@ export function Add() {
         clearExtractions();
         navigate('/opportunities');
       }
-    } catch {
-      toast.error('Save failed');
+    } catch (err: any) {
+      toast.error(`Save failed: ${err?.message || 'Unknown error'}`);
     } finally {
       setSavingIndex(null);
     }

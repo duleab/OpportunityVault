@@ -11,21 +11,46 @@ import { serializeOpportunity } from '../utils/serializeOpportunity.js';
 import type { ExtractedData } from '../types/index.js';
 import { calculateUrgency } from '../utils/urgencyCalculator.js';
 
+const VALID_TYPES = new Set<string>([
+  'SCHOLARSHIP', 'FELLOWSHIP', 'GRANT', 'JOB', 'INTERNSHIP', 'RESEARCH',
+  'SUMMER_PROGRAM', 'COMPETITION', 'CONFERENCE', 'VOLUNTEER', 'EXCHANGE', 'TRAINING', 'OTHER'
+]);
+
+function parseSafeType(val: unknown): OpportunityType {
+  if (!val) return 'OTHER' as OpportunityType;
+  let str = String(val).trim().toUpperCase().replace(/\s+/g, '_');
+  if (str === 'PROGRAM' || str === 'BOOTCAMP' || str === 'WORKSHOP' || str === 'COURSE') str = 'TRAINING';
+  if (str === 'HACKATHON') str = 'COMPETITION';
+  if (str === 'EMPLOYMENT' || str === 'FULL_TIME' || str === 'PART_TIME') str = 'JOB';
+  if (VALID_TYPES.has(str)) return str as OpportunityType;
+  return 'OTHER' as OpportunityType;
+}
+
+function parseSafeDate(val: unknown): Date | null {
+  if (!val) return null;
+  const str = String(val).trim();
+  if (!str || /^(null|none|tbd|n\/a|rolling|continuous|open|varies|various|ongoing|unspecified)$/i.test(str)) {
+    return null;
+  }
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function buildOpportunityData(
   extracted: ExtractedData,
   rawText: string,
   userEdits?: Record<string, unknown>
 ) {
   const merged = { ...extracted, ...userEdits };
-  const deadline = merged.deadline ? new Date(String(merged.deadline)) : null;
-  const startDate = merged.startDate ? new Date(String(merged.startDate)) : null;
+  const deadline = parseSafeDate(merged.deadline);
+  const startDate = parseSafeDate(merged.startDate);
   const urgency = calculateUrgency(deadline);
 
   return {
     name: String(merged.name ?? 'Untitled Opportunity'),
     organization: merged.organization ? String(merged.organization) : null,
     description: merged.description ? String(merged.description) : null,
-    type: (merged.type as OpportunityType) ?? 'OTHER',
+    type: parseSafeType(merged.type),
     level: merged.level ? String(merged.level) : null,
     field: merged.field ? String(merged.field) : null,
     countries: stringifyJsonArray(Array.isArray(merged.countries) ? merged.countries.map(String) : []),
@@ -214,7 +239,7 @@ export const updateOpportunity = asyncHandler(async (req: AuthRequest, res: Resp
     if (body[f] !== undefined) updateData[f] = body[f];
   });
 
-  if (body.type) updateData.type = body.type;
+  if (body.type) updateData.type = parseSafeType(body.type);
   if (body.status) {
     updateData.status = body.status;
     if (body.status === 'APPLIED') updateData.appliedAt = new Date();
@@ -223,10 +248,10 @@ export const updateOpportunity = asyncHandler(async (req: AuthRequest, res: Resp
   if (body.isOnline !== undefined) updateData.isOnline = body.isOnline;
   if (body.hasFee !== undefined) updateData.hasFee = body.hasFee;
   if (body.deadline !== undefined) {
-    updateData.deadline = body.deadline ? new Date(String(body.deadline)) : null;
+    updateData.deadline = parseSafeDate(body.deadline);
   }
   if (body.startDate !== undefined) {
-    updateData.startDate = body.startDate ? new Date(String(body.startDate)) : null;
+    updateData.startDate = parseSafeDate(body.startDate);
   }
   if (body.countries) updateData.countries = stringifyJsonArray(body.countries as string[]);
   if (body.requirements) updateData.requirements = stringifyJsonArray(body.requirements as string[]);
