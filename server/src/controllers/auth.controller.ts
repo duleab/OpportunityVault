@@ -28,8 +28,11 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response) => {
   try {
     const result = await loginUser(email, password);
     res.json(result);
-  } catch {
-    throw new AppError(401, 'Invalid credentials');
+  } catch (err) {
+    if (err instanceof Error && err.message === 'Invalid credentials') {
+      throw new AppError(401, 'Invalid credentials');
+    }
+    throw err;
   }
 });
 
@@ -40,8 +43,11 @@ export const refresh = asyncHandler(async (req: AuthRequest, res: Response) => {
   try {
     const result = await refreshAccessToken(refreshToken);
     res.json(result);
-  } catch {
-    throw new AppError(401, 'Invalid refresh token');
+  } catch (err) {
+    if (err instanceof Error && err.message === 'Invalid refresh token') {
+      throw new AppError(401, 'Invalid refresh token');
+    }
+    throw err;
   }
 });
 
