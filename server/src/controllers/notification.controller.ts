@@ -43,13 +43,14 @@ export const getSettings = asyncHandler(async (req: AuthRequest, res: Response) 
 });
 
 export const patchSettings = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { aiProvider, ntfyTopic, ntfyEnabled, ntfyServerUrl, notifyDaysBefore, name } = req.body as {
+  const { aiProvider, ntfyTopic, ntfyEnabled, ntfyServerUrl, notifyDaysBefore, name, apiKeys } = req.body as {
     aiProvider?: string;
     ntfyTopic?: string;
     ntfyEnabled?: boolean;
     ntfyServerUrl?: string;
     notifyDaysBefore?: number[];
     name?: string;
+    apiKeys?: Record<string, string>;
   };
 
   const settings = await updateUserSettings(req.user!.userId, {
@@ -59,6 +60,7 @@ export const patchSettings = asyncHandler(async (req: AuthRequest, res: Response
     ntfyServerUrl,
     notifyDaysBefore,
     name,
+    apiKeys,
   });
   res.json({ settings });
 });
@@ -66,6 +68,17 @@ export const patchSettings = asyncHandler(async (req: AuthRequest, res: Response
 export const testExtraction = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { rawText, provider } = req.body as { rawText?: string; provider?: string };
   const text = rawText ?? 'Sample scholarship: Gates Scholarship for undergraduate students. Deadline March 15, 2026. Fully funded. Apply at https://example.com/apply';
-  const result = await extractWithFallback(text, provider);
+  
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+  let userApiKeys: Record<string, string> = {};
+  if (user?.apiKeys) {
+    try {
+      userApiKeys = JSON.parse(user.apiKeys);
+    } catch {
+      // Ignore
+    }
+  }
+
+  const result = await extractWithFallback(text, provider, undefined, userApiKeys);
   res.json(result);
 });

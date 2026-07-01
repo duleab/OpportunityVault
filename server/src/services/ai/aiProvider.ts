@@ -2,7 +2,7 @@ import type { ExtractedData } from '../../types/index.js';
 
 export interface AIExtractor {
   name: string;
-  extract(rawText: string): Promise<ExtractedData[]>;
+  extract(rawText: string, options?: { imageBase64?: string; userApiKey?: string }): Promise<ExtractedData[]>;
 }
 
 export const AI_TIMEOUT_MS = 30_000;

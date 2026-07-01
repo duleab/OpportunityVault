@@ -54,10 +54,20 @@ function buildOpportunityData(
 }
 
 export const extractPreview = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { rawText, provider } = req.body as { rawText?: string; provider?: string };
-  if (!rawText?.trim()) throw new AppError(400, 'rawText is required');
+  const { rawText, provider, imageBase64 } = req.body as { rawText?: string; provider?: string; imageBase64?: string };
+  if (!rawText?.trim() && !imageBase64) throw new AppError(400, 'rawText or image is required');
 
-  const result = await extractWithFallback(rawText, provider);
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+  let userApiKeys: Record<string, string> = {};
+  if (user?.apiKeys) {
+    try {
+      userApiKeys = JSON.parse(user.apiKeys);
+    } catch {
+      // Ignore
+    }
+  }
+
+  const result = await extractWithFallback(rawText || 'Extract data from the image.', provider, imageBase64, userApiKeys);
   res.json({
     extractions: result.extractions,
     provider: result.provider,

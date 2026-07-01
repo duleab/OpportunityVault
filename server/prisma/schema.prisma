@@ -17,6 +17,7 @@ model User {
   ntfyEnabled      Boolean        @default(true)
   ntfyServerUrl    String         @default("https://ntfy.sh")
   aiProvider       String         @default("groq")
+  apiKeys          String         @default("{}")
   notifyDaysBefore String         @default("[1,3,7]")
   createdAt        DateTime       @default(now())
   opportunities    Opportunity[]

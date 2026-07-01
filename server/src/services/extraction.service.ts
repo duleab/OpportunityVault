@@ -98,7 +98,9 @@ export function postProcessExtraction(data: ExtractedData, rawText: string): {
 
 export async function extractWithFallback(
   rawText: string,
-  preferredProvider?: string
+  preferredProvider?: string,
+  imageBase64?: string,
+  userApiKeys?: Record<string, string>
 ): Promise<{
   extractions: ExtractedData[];
   provider: string;
@@ -116,7 +118,8 @@ export async function extractWithFallback(
     if (!extractor) continue;
 
     try {
-      const rawArray = await extractor.extract(rawText);
+      const userApiKey = userApiKeys?.[providerName];
+      const rawArray = await extractor.extract(rawText, { imageBase64, userApiKey });
       
       const extractions: ExtractedData[] = [];
       const lowConfidenceFieldsList: string[][] = [];

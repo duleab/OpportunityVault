@@ -54,6 +54,7 @@ export function serializeUser(user: {
   ntfyEnabled: boolean;
   ntfyServerUrl: string;
   aiProvider: string;
+  apiKeys: string;
   notifyDaysBefore: string;
 }): AuthUser {
   return {
@@ -64,6 +65,13 @@ export function serializeUser(user: {
     ntfyEnabled: user.ntfyEnabled,
     ntfyServerUrl: user.ntfyServerUrl,
     aiProvider: user.aiProvider,
+    apiKeys: (() => {
+      try {
+        return JSON.parse(user.apiKeys) as Record<string, string>;
+      } catch {
+        return {};
+      }
+    })(),
     notifyDaysBefore: parseJsonArray<number>(user.notifyDaysBefore),
   };
 }
@@ -138,11 +146,15 @@ export async function updateUserSettings(
     ntfyServerUrl: string;
     notifyDaysBefore: number[];
     name: string;
+    apiKeys: Record<string, string>;
   }>
 ): Promise<AuthUser> {
   const updateData: Record<string, unknown> = { ...data };
   if (data.notifyDaysBefore) {
     updateData.notifyDaysBefore = stringifyJsonArray(data.notifyDaysBefore);
+  }
+  if (data.apiKeys) {
+    updateData.apiKeys = JSON.stringify(data.apiKeys);
   }
 
   const user = await prisma.user.update({

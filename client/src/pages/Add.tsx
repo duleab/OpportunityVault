@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Clipboard, Sparkles, ChevronDown, X, PenLine } from 'lucide-react';
+import { Sparkles, ChevronDown, PenLine } from 'lucide-react';
 import { useOpportunityStore } from '../store/opportunityStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useExtraction } from '../hooks/useExtraction';
@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/authStore';
 import { saveExtracted, checkDuplicate, updateOpportunity } from '../services/opportunityService';
 import { ExtractionLoading } from '../components/paste/ExtractionLoading';
 import { ExtractionPreview } from '../components/paste/ExtractionPreview';
+import { PasteInput } from '../components/paste/PasteInput';
 import { DuplicateWarning, type DuplicateMatch } from '../components/ui/DuplicateWarning';
 
 const AI_PROVIDERS = [
@@ -19,13 +20,7 @@ const AI_PROVIDERS = [
   { value: 'ollama',  label: 'Ollama',     note: 'Local' },
 ];
 
-const EXAMPLE_TEXT = `DAAD MIDE Scholarship 2026
-Organization: HTW Berlin University of Applied Sciences
-Country: Germany
-Type: Fully Funded Master's Scholarship
-Deadline: 31 August 2026
-Funding: Full Tuition + €992/month stipend + Health Insurance
-Link: https://mide.htw-berlin.de`;
+
 
 export function Add() {
   const navigate = useNavigate();
@@ -37,6 +32,7 @@ export function Add() {
   } = useOpportunityStore();
 
   const [text, setText] = useState(rawText);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
   const { loading, extract } = useExtraction();
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
   // Duplicate state per extraction index
@@ -44,7 +40,7 @@ export function Add() {
   const [duplicateResolved, setDuplicateResolved] = useState<Record<number, boolean>>({});
 
   const handleExtract = async () => {
-    await extract(text, aiProvider);
+    await extract(text, aiProvider, imageBase64 || undefined);
     setDuplicates({});
     setDuplicateResolved({});
   };
@@ -124,16 +120,6 @@ export function Add() {
     }
   };
 
-  const handlePaste = async () => {
-    try {
-      const t = await navigator.clipboard.readText();
-      setText(t);
-      toast.success('Pasted from clipboard');
-    } catch {
-      toast.error('Clipboard access denied');
-    }
-  };
-
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Page header */}
@@ -156,40 +142,14 @@ export function Add() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left — Input */}
         <div className="space-y-4">
-          {/* Textarea card */}
-          <div className="card p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="label">Paste Text</label>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePaste}
-                  className="flex items-center gap-1.5 rounded border border-[#e5e7eb] px-2.5 py-1.5 text-xs text-[#6b7280] hover:text-[#111827] hover:border-[#d1d5db] transition-colors"
-                >
-                  <Clipboard className="h-3 w-3" /> Paste
-                </button>
-                {text && (
-                  <button
-                    onClick={() => setText('')}
-                    className="flex items-center gap-1 rounded border border-[#e5e7eb] px-2 py-1.5 text-xs text-[#9ca3af] hover:text-[#dc2626] hover:border-[#fecaca] transition-colors"
-                  >
-                    <X className="h-3 w-3" /> Clear
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={`Paste a scholarship, job posting, or opportunity text here…\n\nExample:\n${EXAMPLE_TEXT}`}
-              className="w-full resize-none rounded border border-[#e5e7eb] bg-[#fafafa] p-4 text-sm text-[#111827] placeholder-[#9ca3af] focus:border-accent focus:outline-none focus:ring-2 focus:ring-[#bfdbfe] transition min-h-[320px] font-mono leading-relaxed"
-            />
-
-            <div className="flex items-center justify-between text-xs text-[#9ca3af]">
-              <span>{text.length.toLocaleString()} characters</span>
-              <span>Supports multiple opportunities at once</span>
-            </div>
-          </div>
+          {/* Textarea / Drop area */}
+          <PasteInput 
+            value={text} 
+            onChange={setText} 
+            onClear={() => setText('')} 
+            imagePreview={imageBase64} 
+            onImageChange={setImageBase64} 
+          />
 
           {/* Provider + Extract */}
           <div className="card p-4">
@@ -211,7 +171,7 @@ export function Add() {
               {/* Extract button */}
               <button
                 onClick={handleExtract}
-                disabled={loading || !text.trim()}
+                disabled={loading || (!text.trim() && !imageBase64)}
                 className="flex flex-1 items-center justify-center gap-2 rounded bg-accent py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4" />

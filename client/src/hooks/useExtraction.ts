@@ -11,15 +11,15 @@ export function useExtraction() {
   const { setExtractions, setLowConfidenceList, clearExtractions } = useOpportunityStore();
   const [loading, setLoading] = useState(false);
 
-  const extract = async (rawText: string, provider?: string) => {
+  const extract = async (rawText: string, provider?: string, imageBase64?: string) => {
     if (!accessToken) return;
-    if (!rawText.trim()) {
-      toast.error('Paste some text first');
+    if (!rawText.trim() && !imageBase64) {
+      toast.error('Paste some text or provide an image first');
       return;
     }
     setLoading(true);
     try {
-      const result = await extractOpportunity(accessToken, rawText, provider ?? aiProvider);
+      const result = await extractOpportunity(accessToken, rawText, provider ?? aiProvider, imageBase64);
       setExtractions(result.extractions, rawText);
       setLowConfidenceList(result.lowConfidenceFieldsList, result.warnings);
       

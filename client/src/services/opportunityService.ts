@@ -79,12 +79,13 @@ export async function fetchStats(token: string): Promise<StatsOverview> {
 export async function extractOpportunity(
   token: string,
   rawText: string,
-  provider?: string
+  provider?: string,
+  imageBase64?: string
 ): Promise<ExtractionResult> {
   return apiRequest('/extract', {
     method: 'POST',
     token,
-    body: JSON.stringify({ rawText, provider }),
+    body: JSON.stringify({ rawText, provider, imageBase64 }),
   });
 }
 

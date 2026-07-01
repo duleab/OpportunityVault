@@ -6,17 +6,24 @@ import { parseExtractedJson, withTimeout, type AIExtractor } from './aiProvider.
 
 export const ollamaExtractor: AIExtractor = {
   name: 'ollama',
-  async extract(rawText: string): Promise<ExtractedData[]> {
+  async extract(rawText: string, options?: { imageBase64?: string; userApiKey?: string }): Promise<ExtractedData[]> {
     return withTimeout(
       (async () => {
+        const payload: any = {
+          model: 'llama3.2',
+          prompt: buildPrompt(rawText || 'Extract data from the image.'),
+          stream: false,
+          format: 'json',
+        };
+
+        if (options?.imageBase64) {
+          const base64Data = options.imageBase64.replace(/^data:image\/\w+;base64,/, '');
+          payload.images = [base64Data];
+        }
+
         const response = await axios.post(
           `${env.ollamaBaseUrl}/api/generate`,
-          {
-            model: 'llama3.2',
-            prompt: buildPrompt(rawText),
-            stream: false,
-            format: 'json',
-          },
+          payload,
           { timeout: 28000 }
         );
 
