@@ -5,7 +5,7 @@ import type { OpportunityResponse } from '../types/index.js';
 
 export function serializeOpportunity(opp: Opportunity): OpportunityResponse {
   const deadline = opp.deadline;
-  const urgency = calculateUrgency(deadline);
+  const urgency = calculateUrgency(deadline, opp.status);
 
   let aiData: Record<string, unknown> = {};
   try {
