@@ -34,7 +34,7 @@ export function OpportunityTable({
       header: 'Name',
       cell: (info) => (
         <div>
-          <Link to={`/opportunities/${info.row.original.id}`} className="font-medium text-white hover:text-accent">
+          <Link to={`/opportunities/${info.row.original.id}`} className="font-medium text-[#111827] hover:text-accent">
             {info.getValue()}
           </Link>
           {info.row.original.organization && (
@@ -53,9 +53,10 @@ export function OpportunityTable({
         const countries = info.getValue();
         const shown = countries.slice(0, 2);
         return (
-          <span className="text-sm">
+          <span className="text-sm text-[#374151]">
             {shown.map((c) => `${countryFlag(c)} ${c}`).join(', ')}
             {countries.length > 2 && ` +${countries.length - 2} more`}
+            {countries.length === 0 && '—'}
           </span>
         );
       },
@@ -72,26 +73,38 @@ export function OpportunityTable({
         const u = info.getValue();
         if (u.level === 'none') return <span className="text-gray-500">—</span>;
         const colors: Record<string, string> = {
-          critical: 'bg-danger/20 text-red-300',
-          high: 'bg-orange-500/20 text-orange-300',
+          critical: 'bg-danger/20 text-red-600',
+          high: 'bg-orange-500/20 text-orange-600',
           medium: 'bg-warning/20 text-warning',
-          low: 'text-gray-400',
-          expired: 'bg-danger/20 text-red-400',
+          low: 'bg-gray-100 text-gray-600',
+          expired: 'bg-danger/20 text-red-600',
         };
         return <Badge className={colors[u.level] ?? ''}>{u.label}</Badge>;
       },
     }),
     columnHelper.accessor('level', {
       header: 'Level',
-      cell: (info) => <span className="text-sm capitalize">{info.getValue() ?? '—'}</span>,
+      cell: (info) => <span className="text-sm capitalize text-[#374151]">{info.getValue() ?? '—'}</span>,
+    }),
+    columnHelper.accessor('funding', {
+      header: 'Funding',
+      cell: (info) => <span className="font-mono text-xs text-[#374151]">{info.getValue() || '—'}</span>,
+    }),
+    columnHelper.accessor('isRemote', {
+      header: 'Remote',
+      cell: (info) => (info.getValue() ? <span className="text-success text-xs font-medium">Yes</span> : <span className="text-gray-400 text-xs">No</span>),
+    }),
+    columnHelper.accessor('isOnline', {
+      header: 'Online',
+      cell: (info) => (info.getValue() ? <span className="text-success text-xs font-medium">Yes</span> : <span className="text-gray-400 text-xs">No</span>),
     }),
     columnHelper.accessor('hasFee', {
       header: 'Fee',
       cell: (info) =>
         info.getValue() ? (
-          <span className="text-danger">${info.row.original.feeAmount ?? 'Paid'}</span>
+          <span className="text-warning text-xs font-medium">${info.row.original.feeAmount ?? 'Paid'}</span>
         ) : (
-          <span className="text-accent2">✓ Free</span>
+          <span className="text-success text-xs font-medium">✓ Free</span>
         ),
     }),
     columnHelper.accessor('status', {
@@ -100,7 +113,7 @@ export function OpportunityTable({
         <select
           value={info.getValue()}
           onChange={(e) => onStatusChange(info.row.original.id, e.target.value as AppStatus)}
-          className="rounded border border-white/10 bg-base px-2 py-1 text-xs text-white"
+          className="rounded border border-[#e5e7eb] bg-white px-2 py-1 text-xs text-[#111827] shadow-sm"
         >
           {APP_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -113,12 +126,12 @@ export function OpportunityTable({
         const opp = info.row.original;
         return (
           <div className="flex items-center gap-1">
-            <Link to={`/opportunities/${opp.id}`} className="rounded p-1 hover:bg-white/10"><Eye className="h-4 w-4" /></Link>
-            <Link to={`/opportunities/${opp.id}?edit=1`} className="rounded p-1 hover:bg-white/10"><Pencil className="h-4 w-4" /></Link>
-            <button onClick={() => onDelete(opp.id)} className="rounded p-1 hover:bg-white/10"><Trash2 className="h-4 w-4 text-danger" /></button>
+            <Link to={`/opportunities/${opp.id}`} className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]"><Eye className="h-4 w-4" /></Link>
+            <Link to={`/opportunities/${opp.id}?edit=1`} className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]"><Pencil className="h-4 w-4" /></Link>
+            <button onClick={() => onDelete(opp.id)} className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]"><Trash2 className="h-4 w-4 text-danger" /></button>
             {opp.applicationLink && (
-              <a href={opp.applicationLink} target="_blank" rel="noopener noreferrer" className="rounded p-1 hover:bg-white/10">
-                <ExternalLink className="h-4 w-4 text-accent2" />
+              <a href={opp.applicationLink} target="_blank" rel="noopener noreferrer" className="rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]">
+                <ExternalLink className="h-4 w-4 text-accent" />
               </a>
             )}
           </div>
@@ -134,13 +147,13 @@ export function OpportunityTable({
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
 
   return (
-    <div className="hidden overflow-x-auto rounded-xl border border-white/10 md:block">
+    <div className="hidden overflow-x-auto rounded-xl border border-[#e5e7eb] bg-white shadow-sm md:block">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-white/10 bg-surface/50">
+        <thead className="border-b border-[#e5e7eb] bg-[#f9fafb]">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((h) => (
-                <th key={h.id} className="px-4 py-3 font-medium text-gray-400">
+                <th key={h.id} className="px-4 py-3 font-semibold text-[#6b7280]">
                   {flexRender(h.column.columnDef.header, h.getContext())}
                 </th>
               ))}
@@ -149,7 +162,7 @@ export function OpportunityTable({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+            <tr key={row.id} className="border-b border-[#e5e7eb] hover:bg-[#f3f4f6]/50">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-4 py-3">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

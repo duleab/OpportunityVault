@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Sparkles, Clock, BarChart2, Bell } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 export function Login() {
@@ -45,19 +46,24 @@ export function Login() {
           </p>
           <div className="space-y-3">
             {[
-              { emoji: '🤖', title: 'AI Extraction', desc: 'Paste any text, AI does the rest' },
-              { emoji: '⏰', title: 'Smart Deadlines', desc: 'Never miss an opportunity' },
-              { emoji: '📊', title: 'Live Dashboard', desc: 'Track your full pipeline' },
-              { emoji: '🔔', title: 'Push Alerts', desc: 'Notifications before deadlines' },
-            ].map((f) => (
-              <div key={f.title} className="flex items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3">
-                <span className="text-xl">{f.emoji}</span>
-                <div>
-                  <p className="text-xs font-semibold text-[#111827]">{f.title}</p>
-                  <p className="text-xs text-[#9ca3af]">{f.desc}</p>
+              { icon: Sparkles, title: 'AI Extraction', desc: 'Paste any text, AI does the rest' },
+              { icon: Clock, title: 'Smart Deadlines', desc: 'Never miss an opportunity' },
+              { icon: BarChart2, title: 'Live Dashboard', desc: 'Track your full pipeline' },
+              { icon: Bell, title: 'Push Alerts', desc: 'Notifications before deadlines' },
+            ].map((f) => {
+              const Icon = f.icon;
+              return (
+                <div key={f.title} className="flex items-center gap-3 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#eff6ff] text-accent">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-[#111827]">{f.title}</p>
+                    <p className="text-xs text-[#9ca3af]">{f.desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

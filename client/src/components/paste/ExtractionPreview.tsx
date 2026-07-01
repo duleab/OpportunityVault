@@ -33,8 +33,8 @@ function Field({
 }
 
 function inputClass(low?: boolean) {
-  return `w-full rounded-lg border px-3 py-2 text-sm text-white focus:outline-none ${
-    low ? 'border-warning/40 bg-base focus:border-warning' : 'border-white/10 bg-base focus:border-accent'
+  return `w-full rounded-lg border px-3 py-2 text-sm text-[#111827] focus:outline-none ${
+    low ? 'border-warning/40 bg-[#fffbeb] focus:border-warning' : 'border-[#e5e7eb] bg-white focus:border-accent'
   }`;
 }
 
@@ -60,8 +60,8 @@ export function ExtractionPreview({
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-surface p-6">
-      <h3 className="mb-4 font-display text-lg font-semibold text-white">Extraction Preview</h3>
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
+      <h3 className="mb-4 font-display text-lg font-semibold text-[#111827]">Extraction Preview</h3>
       {warning && (
         <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
           {warning}
@@ -70,7 +70,7 @@ export function ExtractionPreview({
 
       <div className="space-y-6">
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Basic Info</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">Basic Info</h4>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Name" low={low('name')}>
               <input className={inputClass(low('name'))} value={data.name} onChange={(e) => update('name', e.target.value)} />
@@ -90,7 +90,7 @@ export function ExtractionPreview({
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Timeline</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">Timeline</h4>
           <div className="grid gap-3 md:grid-cols-3">
             <Field label="Deadline" low={low('deadline')}>
               <input type="datetime-local" className={inputClass(low('deadline'))} value={data.deadline?.slice(0, 16) ?? ''} onChange={(e) => update('deadline', e.target.value ? new Date(e.target.value).toISOString() : null)} />
@@ -105,7 +105,7 @@ export function ExtractionPreview({
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Location</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">Location</h4>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Countries (comma-separated)" low={low('countries')}>
               <input
@@ -115,11 +115,11 @@ export function ExtractionPreview({
               />
             </Field>
             <div className="flex items-center gap-4 pt-6">
-              <label className="flex items-center gap-2 text-sm text-gray-300">
+              <label className="flex items-center gap-2 text-sm text-[#374151]">
                 <input type="checkbox" checked={data.isRemote} onChange={(e) => update('isRemote', e.target.checked)} />
                 Remote
               </label>
-              <label className="flex items-center gap-2 text-sm text-gray-300">
+              <label className="flex items-center gap-2 text-sm text-[#374151]">
                 <input type="checkbox" checked={data.isOnline} onChange={(e) => update('isOnline', e.target.checked)} />
                 Online
               </label>
@@ -128,9 +128,9 @@ export function ExtractionPreview({
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Financial</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">Financial</h4>
           <div className="grid gap-3 md:grid-cols-3">
-            <label className="flex items-center gap-2 pt-6 text-sm text-gray-300">
+            <label className="flex items-center gap-2 pt-6 text-sm text-[#374151]">
               <input type="checkbox" checked={data.hasFee} onChange={(e) => update('hasFee', e.target.checked)} />
               Has application fee
             </label>
@@ -144,17 +144,17 @@ export function ExtractionPreview({
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Links</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">Links</h4>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Application Link" low={low('applicationLink')}>
               <div className="flex gap-2">
                 <input className={inputClass(low('applicationLink'))} value={data.applicationLink ?? ''} onChange={(e) => update('applicationLink', e.target.value || null)} />
                 {data.applicationLink && (
                   <>
-                    <a href={data.applicationLink} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-white/10 px-3 hover:bg-white/5">
+                    <a href={data.applicationLink} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-[#e5e7eb] px-3 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]">
                       <ExternalLink className="h-4 w-4" />
                     </a>
-                    <button type="button" onClick={() => copyLink(data.applicationLink!)} className="rounded-lg border border-white/10 px-3 hover:bg-white/5">
+                    <button type="button" onClick={() => copyLink(data.applicationLink!)} className="rounded-lg border border-[#e5e7eb] px-3 text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]">
                       <Copy className="h-4 w-4" />
                     </button>
                   </>
@@ -168,7 +168,7 @@ export function ExtractionPreview({
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Eligibility</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">Eligibility</h4>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Level" low={low('level')}>
               <input className={inputClass(low('level'))} value={data.level ?? ''} onChange={(e) => update('level', e.target.value || null)} />
@@ -190,7 +190,7 @@ export function ExtractionPreview({
         </section>
 
         <section>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Description</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6b7280]">Description</h4>
           <Field label="Summary" low={low('description')}>
             <textarea className={inputClass(low('description'))} rows={3} value={data.description ?? ''} onChange={(e) => update('description', e.target.value || null)} />
           </Field>
@@ -199,10 +199,10 @@ export function ExtractionPreview({
 
       <div className="mt-6">
         <div className="mb-2 flex justify-between text-sm">
-          <span className="text-gray-400">AI Confidence</span>
-          <span className="font-mono text-accent">{confidence}%</span>
+          <span className="text-[#6b7280]">AI Confidence</span>
+          <span className="font-mono text-accent font-semibold">{confidence}%</span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-base">
+        <div className="h-2 overflow-hidden rounded-full bg-[#e5e7eb]">
           <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${confidence}%` }} />
         </div>
       </div>

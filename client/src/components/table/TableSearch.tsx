@@ -13,7 +13,7 @@ export function TableSearch({ value, onChange }: TableSearchProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search opportunities..."
-        className="w-full rounded-lg border border-white/10 bg-base py-2 pl-10 pr-4 text-sm text-white placeholder:text-gray-500 focus:border-accent focus:outline-none md:w-64"
+        className="w-full rounded-lg border border-[#e5e7eb] bg-white py-2 pl-10 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-accent focus:outline-none shadow-sm md:w-64"
       />
     </div>
   );

@@ -45,8 +45,8 @@ export function OpportunityDetail({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Badge className={TYPE_COLORS[opp.type]}>{opp.type}</Badge>
-          <h2 className="mt-2 font-display text-2xl font-bold text-white">{opp.name}</h2>
-          {opp.organization && <p className="text-gray-400">{opp.organization}</p>}
+          <h2 className="mt-2 font-display text-2xl font-bold text-[#111827]">{opp.name}</h2>
+          {opp.organization && <p className="text-[#6b7280]">{opp.organization}</p>}
         </div>
         {opp.deadline && opp.urgency.level !== 'expired' && (
           <CountdownTimer deadline={opp.deadline} />
@@ -71,17 +71,17 @@ export function OpportunityDetail({
             <Info label="Countries" value={opp.countries.join(', ') || '—'} />
             <Info label="Language" value={opp.languageReq ?? '—'} />
           </div>
-          {opp.description && <p className="text-gray-300">{opp.description}</p>}
+          {opp.description && <p className="text-[#374151]">{opp.description}</p>}
           {opp.eligibility && (
             <div>
-              <h4 className="mb-1 text-sm font-medium text-gray-400">Eligibility</h4>
-              <p className="text-gray-300">{opp.eligibility}</p>
+              <h4 className="mb-1 text-sm font-medium text-[#6b7280]">Eligibility</h4>
+              <p className="text-[#374151]">{opp.eligibility}</p>
             </div>
           )}
           {opp.notes && (
             <div>
-              <h4 className="mb-1 text-sm font-medium text-gray-400">Notes</h4>
-              <p className="whitespace-pre-wrap text-gray-300">{opp.notes}</p>
+              <h4 className="mb-1 text-sm font-medium text-[#6b7280]">Notes</h4>
+              <p className="whitespace-pre-wrap text-[#374151]">{opp.notes}</p>
             </div>
           )}
           <StatusUpdater status={opp.status} onChange={onStatusChange} />
@@ -104,16 +104,16 @@ export function OpportunityDetail({
         <Button variant="danger" onClick={onDelete}>Delete</Button>
       </div>
 
-      <div className="rounded-lg border border-white/10">
+      <div className="rounded-lg border border-[#e5e7eb] bg-[#f9fafb]">
         <button
           onClick={() => setShowRaw(!showRaw)}
-          className="flex w-full items-center justify-between px-4 py-3 text-sm text-gray-400 hover:bg-white/5"
+          className="flex w-full items-center justify-between px-4 py-3 text-sm text-[#6b7280] hover:bg-[#f3f4f6]"
         >
           View raw AI extraction
           {showRaw ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
         {showRaw && (
-          <pre className="max-h-64 overflow-auto border-t border-white/10 p-4 font-mono text-xs text-gray-400">
+          <pre className="max-h-64 overflow-auto border-t border-[#e5e7eb] p-4 font-mono text-xs text-[#6b7280]">
             {JSON.stringify(opp.aiExtractedData, null, 2)}
           </pre>
         )}
@@ -125,8 +125,8 @@ export function OpportunityDetail({
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="font-mono text-sm text-gray-200">{value}</p>
+      <p className="text-xs text-[#6b7280]">{label}</p>
+      <p className="font-mono text-sm text-[#111827] font-medium">{value}</p>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export function TableFilters({
         value={country}
         onChange={(e) => onCountryChange(e.target.value)}
         placeholder="Country"
-        className="w-32 rounded-lg border border-white/10 bg-base px-3 py-2 text-sm text-white focus:border-accent focus:outline-none"
+        className="w-32 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] focus:border-accent focus:outline-none shadow-sm"
       />
       <Select value={urgency} onChange={(e) => onUrgencyChange(e.target.value)} className="w-36">
         <option value="">All Urgency</option>

@@ -58,19 +58,19 @@ export function OpportunityCard({ opportunity: opp, onStatusChange }: Opportunit
       <div className="flex items-start gap-3">
         <OrgAvatar name={opp.organization ?? opp.name} />
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] text-gray-500 truncate">{opp.organization ?? '—'}</p>
-          <Link to={`/opportunities/${opp.id}`} className="text-sm font-semibold text-white hover:text-accent transition truncate block">
+          <p className="text-[11px] text-[#6b7280] truncate">{opp.organization ?? '—'}</p>
+          <Link to={`/opportunities/${opp.id}`} className="text-sm font-semibold text-[#111827] hover:text-accent transition truncate block">
             {opp.name}
           </Link>
         </div>
-        <span className={`flex-shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium capitalize ${TYPE_COLORS[opp.type] ?? 'bg-gray-500/15 text-gray-300'}`}>
+        <span className={`flex-shrink-0 rounded-md px-2 py-0.5 text-[11px] font-medium capitalize ${TYPE_COLORS[opp.type] ?? 'bg-gray-100 text-gray-700'}`}>
           {opp.type.toLowerCase().replace('_', ' ')}
         </span>
       </div>
 
       {/* Description */}
       {opp.description && (
-        <p className="text-xs text-gray-500 line-clamp-2">{opp.description}</p>
+        <p className="text-xs text-[#6b7280] line-clamp-2">{opp.description}</p>
       )}
 
       {/* Deadline row */}
@@ -81,25 +81,25 @@ export function OpportunityCard({ opportunity: opp, onStatusChange }: Opportunit
               <span className={`font-mono ${deadlineColor}`}>
                 {daysLeft !== null && daysLeft >= 0 ? `${daysLeft}d left` : daysLeft !== null && daysLeft < 0 ? 'Expired' : ''}
               </span>
-              <span className="ml-2 text-gray-600">{format(new Date(opp.deadline), 'MMM d, yyyy')}</span>
+              <span className="ml-2 text-[#6b7280]">{format(new Date(opp.deadline), 'MMM d, yyyy')}</span>
             </div>
           ) : (
-            <span className="text-gray-600">No deadline</span>
+            <span className="text-[#9ca3af]">No deadline</span>
           )}
         </div>
         {opp.funding && (
-          <span className="rounded-md bg-green-500/10 px-2 py-0.5 text-[11px] text-green-400 border border-green-500/20">
+          <span className="rounded-md bg-green-50 px-2 py-0.5 text-[11px] text-green-700 border border-green-200">
             {opp.funding.length > 20 ? opp.funding.slice(0, 20) + '…' : opp.funding}
           </span>
         )}
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.05]">
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#e5e7eb]">
         <select
           value={opp.status}
           onChange={(e) => onStatusChange(opp.id, e.target.value as AppStatus)}
-          className="rounded-md border border-white/10 bg-surface-2 px-2 py-1 text-xs text-white focus:outline-none focus:border-accent/40 cursor-pointer"
+          className="rounded-md border border-[#e5e7eb] bg-white px-2 py-1 text-xs text-[#111827] focus:outline-none focus:border-accent/40 cursor-pointer shadow-sm"
         >
           {['SAVED','PLANNING','IN_PROGRESS','APPLIED','INTERVIEW','ACCEPTED','REJECTED'].map(s => (
             <option key={s} value={s}>{s.toLowerCase().replace('_', ' ')}</option>
@@ -110,7 +110,7 @@ export function OpportunityCard({ opportunity: opp, onStatusChange }: Opportunit
             href={opp.applicationLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 rounded-md bg-accent/15 px-2.5 py-1 text-xs text-accent hover:bg-accent/25 transition"
+            className="flex items-center gap-1 rounded-md bg-accent/10 px-2.5 py-1 text-xs text-accent font-medium hover:bg-accent/20 transition"
           >
             Apply <ExternalLink className="h-3 w-3" />
           </a>
