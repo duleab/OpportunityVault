@@ -6,10 +6,13 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   total: number;
   limit: number;
+  onLimitChange?: (limit: number) => void;
 }
 
-export function Pagination({ page, totalPages, onPageChange, total, limit }: PaginationProps) {
-  if (totalPages <= 1) return null;
+const LIMIT_OPTIONS = [20, 50, 100];
+
+export function Pagination({ page, totalPages, onPageChange, total, limit, onLimitChange }: PaginationProps) {
+  if (totalPages <= 1 && total <= Math.min(...LIMIT_OPTIONS)) return null;
 
   const from = (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
@@ -37,45 +40,70 @@ export function Pagination({ page, totalPages, onPageChange, total, limit }: Pag
     }`;
 
   return (
-    <div className="flex items-center justify-between border-t border-[#e5e7eb] pt-4 mt-4">
-      {/* Count info */}
-      <p className="text-sm text-[#6b7280]">
-        Showing <span className="font-medium text-[#111827]">{from}–{to}</span> of{' '}
-        <span className="font-medium text-[#111827]">{total}</span>
-      </p>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#e5e7eb] pt-4 mt-4">
+      {/* Left: count info + rows-per-page */}
+      <div className="flex items-center gap-3">
+        <p className="text-sm text-[#6b7280]">
+          Showing <span className="font-medium text-[#111827]">{from}–{to}</span> of{' '}
+          <span className="font-medium text-[#111827]">{total}</span>
+        </p>
 
-      {/* Controls */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => onPageChange(page - 1)}
-          disabled={page === 1}
-          className={btn(false, page === 1)}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-
-        {pages.map((p, i) =>
-          p === '...' ? (
-            <span key={`ellipsis-${i}`} className="px-1 text-sm text-[#9ca3af]">…</span>
-          ) : (
-            <button
-              key={p}
-              onClick={() => onPageChange(p as number)}
-              className={btn(p === page, false)}
-            >
-              {p}
-            </button>
-          )
+        {onLimitChange && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-[#9ca3af]">Rows:</span>
+            <div className="flex items-center gap-0.5">
+              {LIMIT_OPTIONS.map((l) => (
+                <button
+                  key={l}
+                  onClick={() => { onLimitChange(l); onPageChange(1); }}
+                  className={`inline-flex items-center justify-center h-6 min-w-[2rem] rounded px-2 text-xs font-medium transition-colors ${
+                    limit === l
+                      ? 'bg-accent/10 text-accent font-semibold'
+                      : 'text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
-
-        <button
-          onClick={() => onPageChange(page + 1)}
-          disabled={page === totalPages}
-          className={btn(false, page === totalPages)}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
       </div>
+
+      {/* Right: page controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            className={btn(false, page === 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {pages.map((p, i) =>
+            p === '...' ? (
+              <span key={`ellipsis-${i}`} className="px-1 text-sm text-[#9ca3af]">…</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => onPageChange(p as number)}
+                className={btn(p === page, false)}
+              >
+                {p}
+              </button>
+            )
+          )}
+
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalPages}
+            className={btn(false, page === totalPages)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

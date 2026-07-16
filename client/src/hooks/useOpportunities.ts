@@ -10,18 +10,24 @@ import {
 import type { AppStatus } from '../types/opportunity.types';
 
 export function useOpportunities(initialFilters: OpportunityFilters = {}) {
-  const accessToken = useAuthStore((s) => s.accessToken);
+  const accessToken     = useAuthStore((s) => s.accessToken);
   const setOpportunities = useOpportunityStore((s) => s.setOpportunities);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(initialFilters);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal]     = useState(0);
 
   const load = useCallback(async () => {
     if (!accessToken) return;
     setLoading(true);
     try {
       const res = await fetchOpportunities(accessToken, filters);
-      setOpportunities(res.data);
+      // Pass pagination meta through to the store so Pagination component has it
+      setOpportunities(res.data, {
+        page:       res.page,
+        totalPages: res.totalPages,
+        total:      res.total,
+        limit:      res.limit,
+      });
       setTotal(res.total);
     } finally {
       setLoading(false);

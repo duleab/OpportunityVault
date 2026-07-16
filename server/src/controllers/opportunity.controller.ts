@@ -161,11 +161,15 @@ export const saveExtracted = asyncHandler(async (req: AuthRequest, res: Response
   res.status(201).json({ opportunity: serializeOpportunity(opp) });
 });
 
+const VALID_SORT_FIELDS = new Set([
+  'deadline', 'createdAt', 'updatedAt', 'name', 'status', 'type', 'urgencyLevel',
+]);
+
 export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const {
     type, status, country, urgency, search,
-    sortBy = 'deadline', sortOrder = 'asc',
+    sortBy = 'createdAt', sortOrder = 'desc',
     page = '1', limit = '20',
   } = req.query as Record<string, string>;
 
@@ -173,9 +177,14 @@ export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Resp
   const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
   const skip = (pageNum - 1) * limitNum;
 
+  // Sanitise sortBy to prevent injection of arbitrary field names
+  const safeSortBy = VALID_SORT_FIELDS.has(sortBy) ? sortBy : 'createdAt';
+
   const where: Record<string, unknown> = { userId };
   if (type) where.type = type;
   if (status) where.status = status;
+  // urgencyLevel is a real DB column — filter at the DB level when provided
+  if (urgency) where.urgencyLevel = urgency;
   if (search) {
     where.OR = [
       { name: { contains: search } },
@@ -186,21 +195,19 @@ export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Resp
 
   const rows = await prisma.opportunity.findMany({
     where: where as never,
-    orderBy: { [sortBy]: sortOrder === 'desc' ? 'desc' : 'asc' },
+    orderBy: { [safeSortBy]: sortOrder === 'desc' ? 'desc' : 'asc' },
   });
 
   let serialized = rows.map(serializeOpportunity);
 
+  // country is stored as a JSON array string — must filter in-memory
   if (country) {
     serialized = serialized.filter((o) =>
       o.countries.some((c) => c.toLowerCase().includes(country.toLowerCase()))
     );
   }
 
-  if (urgency) {
-    serialized = serialized.filter((o) => o.urgency.level === urgency);
-  }
-
+  // Total is now accurate: computed AFTER all filters, BEFORE pagination slice
   const total = serialized.length;
   const data = serialized.slice(skip, skip + limitNum);
 
