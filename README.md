@@ -4,11 +4,8 @@
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-opportunity--vault--client.vercel.app-2563eb?style=flat-square&logo=vercel)](https://opportunity-vault-client.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](./LICENSE)
-[![Stack](https://img.shields.io/badge/Stack-React%20%2B%20Node.js%20%2B%20PostgreSQL-6366f1?style=flat-square)](https://github.com/duleab/OpportunityVault)
-[![Deployed on](https://img.shields.io/badge/Deployed%20on-Vercel%20%2B%20Render%20%2B%20Supabase-0ea5e9?style=flat-square)](./DEPLOYMENT.md)
 
-🌐 **Live app:** https://opportunity-vault-client.vercel.app  
-📦 **Full deployment guide:** [DEPLOYMENT.md](./DEPLOYMENT.md)
+🌐 **Live app:** https://opportunity-vault-client.vercel.app
 
 ---
 
@@ -17,9 +14,6 @@
 - [What is OpportunityVault?](#what-is-opportunityvault)
 - [Features](#features)
 - [Screenshots](#screenshots)
-- [Tech Stack](#tech-stack)
-- [Quick Start (Local)](#quick-start-local)
-- [Environment Variables](#environment-variables)
 - [AI Provider Setup (Detailed Guide)](#ai-provider-setup-detailed-guide)
   - [How AI Extraction Works](#how-ai-extraction-works)
   - [Provider 1: Groq — Llama 3.3 70B](#provider-1-groq--llama-33-70b-recommended)
@@ -31,10 +25,7 @@
   - [Testing Your API Keys](#testing-your-api-keys)
   - [How the Fallback Chain Works](#how-the-fallback-chain-works)
 - [ntfy.sh Push Notifications](#ntfysh-push-notifications)
-- [API Endpoints](#api-endpoints)
 - [Notion Export](#notion-export)
-- [Keyboard Shortcuts](#keyboard-shortcuts)
-- [Deployment](#deployment)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [License](#license)
@@ -131,127 +122,6 @@ Configure which AI model powers your extractions. See the [full AI provider guid
 ![Account Settings](./Figures/Account%20setting.png)
 
 Update your display name, change your password, or permanently delete your account from the **Settings → Account** tab.
-
----
-
-## Tech Stack
-
-| Layer | Technologies |
-|-------|-------------|
-| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, Zustand, React Router v6, TanStack Table, Recharts |
-| **Backend** | Node.js, Express, TypeScript, Prisma ORM |
-| **Database** | SQLite (local dev), PostgreSQL on Supabase (production) |
-| **AI Providers** | Groq (Llama 3.3 70B), Z.ai GLM-4 Flash, Google Gemini 1.5 Flash, Mistral Small, Ollama (local) |
-| **Notifications** | ntfy.sh (open-source push, no account needed) |
-| **Deployment** | Vercel (frontend) + Render (API + cron) + Supabase (database) |
-
----
-
-## Quick Start (Local)
-
-### Prerequisites
-
-- **Node.js** 20+, **npm** 10+
-- **Docker** (optional — for local PostgreSQL matching production)
-
-### 1. Clone & install
-
-```bash
-git clone https://github.com/duleab/OpportunityVault.git
-cd OpportunityVault
-npm install
-```
-
-### 2. Configure environment
-
-```bash
-# Windows (PowerShell)
-Copy-Item .env.example server\.env
-Copy-Item .env.example client\.env
-
-# macOS / Linux
-cp .env.example server/.env
-cp .env.example client/.env
-```
-
-Edit `server/.env` — the defaults work with `docker-compose`:
-
-```env
-DATABASE_URL=postgresql://opportunityvault:opportunityvault@localhost:5432/opportunityvault
-DIRECT_URL=postgresql://opportunityvault:opportunityvault@localhost:5432/opportunityvault
-JWT_ACCESS_SECRET=your_random_secret_min_32_chars
-JWT_REFRESH_SECRET=another_random_secret_min_32_chars
-GROQ_API_KEY=gsk_...          # At least one AI key is required
-PORT=4000
-CLIENT_URL=http://localhost:5173
-```
-
-### 3. Start database
-
-```bash
-docker-compose up -d
-```
-
-> **No Docker?** See [SQLite quick-dev](./DEPLOYMENT.md#sqlite-quick-dev-optional) for zero-dependency local setup.
-
-### 4. Initialize database schema
-
-```bash
-cd server
-npx prisma migrate deploy
-npx prisma generate
-cd ..
-```
-
-### 5. Run development servers
-
-```bash
-npm run dev
-```
-
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:4000 |
-
----
-
-## Environment Variables
-
-### Server (`server/.env`)
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | ✅ | — | PostgreSQL pooled connection string |
-| `DIRECT_URL` | ✅ | — | PostgreSQL direct URL for Prisma migrations |
-| `JWT_ACCESS_SECRET` | ✅ | — | Min 32-char random string |
-| `JWT_REFRESH_SECRET` | ✅ | — | Min 32-char random string (different from above) |
-| `JWT_ACCESS_EXPIRES` | | `15m` | Access token lifetime |
-| `JWT_REFRESH_EXPIRES` | | `7d` | Refresh token lifetime |
-| `PORT` | | `4000` | API listen port |
-| `CLIENT_URL` | ✅ | — | Frontend URL for CORS (e.g. `https://yourapp.vercel.app`) |
-| `AI_PROVIDER` | | `groq` | Default AI provider for the server fallback |
-| `GROQ_API_KEY` | ✅* | — | Server-level Groq key (fallback if user has no personal key) |
-| `GEMINI_API_KEY` | | — | Server-level Gemini key |
-| `MISTRAL_API_KEY` | | — | Server-level Mistral key |
-| `ZHIPU_API_KEY` | | — | Server-level ZhipuAI key |
-| `OLLAMA_BASE_URL` | | `http://localhost:11434` | Ollama endpoint |
-| `NTFY_DEFAULT_SERVER` | | `https://ntfy.sh` | ntfy server URL |
-| `NOTION_API_KEY` | | — | Notion integration token (optional) |
-
-*At least one AI provider key is required for extraction to work.
-
-**Generate JWT secrets (PowerShell):**
-```powershell
--join ((48..57) + (65..90) + (97..122) | Get-Random -Count 48 | ForEach-Object {[char]$_})
-```
-Run twice — once for each secret.
-
-### Client (`client/.env`)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VITE_API_URL` | `http://localhost:4000/api` | Backend API base URL (baked in at build time) |
 
 ---
 
@@ -409,8 +279,6 @@ Click **Save** to store the opportunity. It immediately appears in your list and
 4. Ollama starts automatically and listens on `http://localhost:11434`
 5. No API key needed — just select **Ollama (Local)** in the app
 
-**For self-hosted / production use:** Set the `OLLAMA_BASE_URL` environment variable on your server to point to your Ollama instance URL.
-
 ---
 
 ### Configuring Providers in the App
@@ -431,9 +299,9 @@ All provider configuration happens in **Settings → AI Provider** — no code c
 3. **Click on a provider card** to select it as your primary provider. The card turns blue and the selection is saved instantly to the server.
 4. **Enter your API key** in the text field below each provider (shown as "... API Key (Optional)"). Each provider has its own separate key field.
    - The key field shows dots (`•••••`) by default. Click the 👁 eye icon to reveal/hide it.
-   - Keys are saved **per user** in the database (encrypted) and used for all your personal extractions.
+   - Keys are saved **per user** in the database and used for all your personal extractions.
    - If a field says *"Optional"*, it means the server has a global fallback key configured — your personal key will take priority over the server key if both are present.
-5. **Keys are auto-saved** when you click out of the field (`onBlur`). A "API keys saved" toast notification confirms success.
+5. **Keys are auto-saved** when you click out of the field. A "API keys saved" toast notification confirms success.
 6. If you have entered any keys manually, a **Save API Keys** button also appears at the bottom to save all keys at once.
 
 > **Privacy note:** Your personal API keys are stored in the database associated with your user account. They are sent to the AI provider only when you trigger an extraction — they are never logged or shared.
@@ -455,7 +323,7 @@ Every provider card has a **Test** button on the right side. Click it to:
 | Test fails immediately | Wrong or missing API key | Re-copy the key from the provider console |
 | Test fails with timeout | Provider is slow / overloaded | Try again in a minute |
 | Test fails only for Ollama | Ollama is not running | Run `ollama serve` or restart the Ollama app |
-| Test fails for all providers | Server env var missing | Set `GROQ_API_KEY` (or another provider key) in Render environment variables |
+| Test fails for all providers | Server env var missing | Set `GROQ_API_KEY` (or another provider key) in your server environment variables |
 
 ---
 
@@ -466,7 +334,7 @@ When you click **Extract with AI**, the system uses the following priority order
 ```
 1. Your personal API key for the selected provider (set in Settings)
         ↓ (if missing or fails)
-2. The server-level API key for that provider (set as an environment variable on Render)
+2. The server-level API key for that provider (set as an environment variable)
         ↓ (if also missing or fails)
 3. Try the next provider in the chain: Groq → Gemini → Mistral → Zhipu → Ollama
         ↓ (if all fail)
@@ -498,65 +366,6 @@ OpportunityVault sends push notifications to your phone via [ntfy.sh](https://nt
 5. Click **Test** — you should receive a test notification on your phone within seconds
 6. Toggle **Enable notifications** on
 
-### What triggers notifications
-
-| Event | Timing | Priority |
-|-------|--------|----------|
-| New opportunity saved | Immediately | Low |
-| Deadline reminder | Daily at 09:00 UTC, sent 7 / 3 / 1 days before | High |
-| Status → Applied | Immediately | High |
-| Status → Accepted | Immediately | Urgent 🎉 |
-| Status → Rejected | Immediately | Default |
-| Weekly digest summary | Sundays at 09:00 UTC | Default |
-| Manual test | On demand (Settings) | Default |
-
-### Self-hosted ntfy (for extra privacy)
-
-```bash
-docker run -p 80:80 \
-  -v /var/cache/ntfy:/var/cache/ntfy \
-  -v /etc/ntfy:/etc/ntfy \
-  binwiederhier/ntfy serve
-```
-
-Then set `NTFY_DEFAULT_SERVER=http://your-server-ip` on Render and enter `http://your-server-ip` in the ntfy Server URL field in Settings.
-
----
-
-## API Endpoints
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/api/auth/register` | ❌ | Create account |
-| `POST` | `/api/auth/login` | ❌ | Login → returns tokens |
-| `POST` | `/api/auth/refresh` | ❌ | Refresh access token |
-| `POST` | `/api/extract` | ✅ | AI extraction preview (no save) |
-| `POST` | `/api/extract/save` | ✅ | Save extracted opportunity |
-| `GET` | `/api/opportunities` | ✅ | List with filters + pagination |
-| `GET` | `/api/opportunities/:id` | ✅ | Get single opportunity |
-| `PATCH` | `/api/opportunities/:id` | ✅ | Update opportunity |
-| `DELETE` | `/api/opportunities/:id` | ✅ | Delete opportunity |
-| `POST` | `/api/opportunities/bulk-status` | ✅ | Bulk status update |
-| `GET` | `/api/opportunities/export` | ✅ | Export CSV / JSON / Notion |
-| `GET` | `/api/stats/overview` | ✅ | Dashboard statistics |
-| `GET/PATCH` | `/api/settings` | ✅ | User preferences |
-| `POST` | `/api/notifications/test` | ✅ | Send test ntfy push |
-| `GET` | `/api/health` | ❌ | Health check (uptime monitoring) |
-
-### List query parameters (`GET /api/opportunities`)
-
-| Parameter | Type | Default | Options / Notes |
-|-----------|------|---------|-----------------|
-| `page` | number | `1` | Page number |
-| `limit` | number | `20` | `20`, `50`, or `100` |
-| `sortBy` | string | `createdAt` | `createdAt`, `deadline`, `name`, `status`, `type`, `urgencyLevel`, `updatedAt` |
-| `sortOrder` | string | `desc` | `asc` or `desc` |
-| `search` | string | — | Full-text search across name, organization, description |
-| `type` | string | — | `SCHOLARSHIP`, `FELLOWSHIP`, `GRANT`, `JOB`, `INTERNSHIP`, `RESEARCH`, `SUMMER_PROGRAM`, `COMPETITION`, `CONFERENCE`, `VOLUNTEER`, `EXCHANGE`, `TRAINING`, `OTHER` |
-| `status` | string | — | `SAVED`, `PLANNING`, `IN_PROGRESS`, `APPLIED`, `INTERVIEW`, `ACCEPTED`, `REJECTED`, `WITHDRAWN`, `SKIPPED`, `EXPIRED` |
-| `urgency` | string | — | `critical`, `high`, `medium`, `low`, `expired` |
-| `country` | string | — | Partial match (e.g. `France` matches `France`, `South France`) |
-
 ---
 
 ## Notion Export
@@ -575,38 +384,6 @@ Then set `NTFY_DEFAULT_SERVER=http://your-server-ip` on Render and enter `http:/
 5. Open the database → click **···** (top right) → **Add connections** → select your integration
 6. Copy the database ID from the URL: `notion.so/your-workspace/{DATABASE_ID}?v=...`
 7. In OpportunityVault: **Settings → Export** → paste your integration token and database ID → **Sync to Notion**
-
----
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl + N` | Open **Add Opportunity** page |
-
----
-
-## Deployment
-
-**Full step-by-step guide:** [DEPLOYMENT.md](./DEPLOYMENT.md)
-
-```
-User Browser
-    ↓
-Vercel  ──────────── React SPA (client/) — static, CDN-served
-    ↓ VITE_API_URL
-Render  ──────────── Express API + node-cron (server/)
-    ↓ DATABASE_URL / DIRECT_URL
-Supabase ─────────── PostgreSQL (free tier)
-```
-
-**Cost: $0/month** on all free tiers. Estimated setup time: 30–45 minutes.
-
-Quick summary:
-1. **Supabase** — Create project, copy pooled (port 6543) + direct (port 5432) connection strings
-2. **Render** — Deploy via `render.yaml` blueprint, set env vars
-3. **Vercel** — Import repo, set `VITE_API_URL=https://your-api.onrender.com/api`
-4. **UptimeRobot** — Ping `/api/health` every 5 min to prevent Render cold starts (free tier sleeps after 15 min)
 
 ---
 
