@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import crypto from 'crypto';
 
 export class AppError extends Error {
   constructor(
@@ -21,8 +22,9 @@ export function errorHandler(
     return;
   }
 
-  console.error(err);
-  res.status(500).json({ error: err.message || 'Internal server error' });
+  const errorId = crypto.randomUUID();
+  console.error(`[${errorId}]`, err);
+  res.status(500).json({ error: 'Internal server error', errorId });
 }
 
 export function asyncHandler(

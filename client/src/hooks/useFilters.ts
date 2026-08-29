@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { OpportunityFilters } from '../services/opportunityService';
+import { updateFilterParams, type FilterParamUpdates } from '../utils/filterParams';
 
 export function useFilters() {
   const [params, setParams] = useSearchParams();
@@ -22,14 +23,17 @@ export function useFilters() {
 
   const setFilter = useCallback(
     (key: string, value: string) => {
-      setParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        // Reset to page 1 whenever any filter (except page itself) changes
-        if (key !== 'page') next.delete('page');
-        return next;
-      });
+      setParams((prev) => updateFilterParams(prev, {
+        [key]: value || null,
+        ...(key === 'page' ? { page: value || null } : {}),
+      }));
+    },
+    [setParams]
+  );
+
+  const setFilters = useCallback(
+    (updates: FilterParamUpdates) => {
+      setParams((prev) => updateFilterParams(prev, updates));
     },
     [setParams]
   );
@@ -39,6 +43,7 @@ export function useFilters() {
   return {
     filters,
     setFilter,
+    setFilters,
     clearFilters,
     view: params.get('view') ?? 'table',
     setView: (v: string) => setFilter('view', v),

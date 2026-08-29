@@ -5,11 +5,11 @@ import { patchNotificationSettings, testNotification } from '../../services/noti
 import { Button } from '../ui/Button';
 
 const NOTIFY_OPTIONS = [1, 3, 7, 30];
+const NTFY_SERVER_URL = 'https://ntfy.sh';
 
 export function NotificationSettings() {
   const { user, accessToken, updateUser } = useAuthStore();
   const [topic, setTopic] = useState(user?.ntfyTopic ?? '');
-  const [serverUrl, setServerUrl] = useState(user?.ntfyServerUrl ?? 'https://ntfy.sh');
   const [enabled, setEnabled] = useState(user?.ntfyEnabled ?? true);
   const [days, setDays] = useState<number[]>(user?.notifyDaysBefore ?? [1, 3, 7]);
   const [saving, setSaving] = useState(false);
@@ -25,7 +25,7 @@ export function NotificationSettings() {
       const res = await patchNotificationSettings(accessToken, {
         ntfyTopic: topic,
         ntfyEnabled: enabled,
-        ntfyServerUrl: serverUrl,
+        ntfyServerUrl: NTFY_SERVER_URL,
         notifyDaysBefore: days,
       });
       updateUser(res.settings);
@@ -40,7 +40,7 @@ export function NotificationSettings() {
   const test = async () => {
     if (!accessToken || !topic) return toast.error('Enter a topic first');
     try {
-      await testNotification(accessToken, topic, serverUrl);
+      await testNotification(accessToken, topic, NTFY_SERVER_URL);
       toast.success('Test notification sent!');
     } catch {
       toast.error('Test failed — check topic name');
@@ -62,14 +62,12 @@ export function NotificationSettings() {
             <Button variant="secondary" onClick={test}>Test →</Button>
           </div>
         </label>
-        <label className="block">
+        <div className="block">
           <span className="mb-1 block text-sm text-gray-400">Server URL</span>
-          <input
-            value={serverUrl}
-            onChange={(e) => setServerUrl(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-base px-3 py-2 text-sm text-white"
-          />
-        </label>
+          <div className="w-full rounded-lg border border-white/10 bg-base px-3 py-2 text-sm text-gray-400">
+            {NTFY_SERVER_URL}
+          </div>
+        </div>
       </div>
 
       <div>
@@ -104,11 +102,7 @@ export function NotificationSettings() {
           <li>Enter topic: <code className="font-mono text-accent">opportunityvault-yourname</code></li>
           <li>Paste same topic above and click Test</li>
         </ol>
-        <h4 className="mb-2 mt-4 font-medium text-white">Self-hosted ntfy</h4>
-        <pre className="overflow-x-auto rounded bg-surface p-3 font-mono text-xs">
-{`docker run -p 80:80 -v /var/cache/ntfy:/var/cache/ntfy \\
-  -v /etc/ntfy:/etc/ntfy binwiederhier/ntfy serve`}
-        </pre>
+        <p className="mt-4 text-xs">For security, the hosted app sends notifications only through https://ntfy.sh.</p>
       </div>
     </div>
   );

@@ -108,9 +108,15 @@ export async function exportFromServer(
   notionToken?: string,
   databaseId?: string
 ): Promise<Blob | { success: number; failed: number }> {
+  if (format === 'notion') {
+    return apiRequest('/opportunities/export/notion', {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ notionToken, databaseId }),
+    });
+  }
+
   const params = new URLSearchParams({ format });
-  if (notionToken) params.set('notionToken', notionToken);
-  if (databaseId) params.set('databaseId', databaseId);
 
   const res = await authenticatedFetch(`/opportunities/export?${params}`, { token });
 
@@ -118,7 +124,6 @@ export async function exportFromServer(
     const body = (await res.json().catch(() => null)) as { error?: string } | null;
     throw new Error(body?.error ?? 'Export failed');
   }
-  if (format === 'notion') return res.json() as Promise<{ success: number; failed: number }>;
   return res.blob();
 }
 

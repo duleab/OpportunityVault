@@ -87,7 +87,7 @@ export interface AuthUser {
   ntfyEnabled: boolean;
   ntfyServerUrl: string;
   aiProvider: string;
-  apiKeys: Record<string, string>;
+  apiKeyConfigured: Record<string, boolean>;
   notifyDaysBefore: number[];
 }
 

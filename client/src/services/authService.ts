@@ -29,7 +29,7 @@ export async function getSettings(token: string): Promise<{ settings: AuthUser }
 
 export async function patchSettings(
   token: string,
-  data: Partial<AuthUser>
+  data: Partial<AuthUser> & { apiKeys?: Record<string, string> }
 ): Promise<{ settings: AuthUser }> {
   return apiRequest('/settings', { method: 'PATCH', token, body: JSON.stringify(data) });
 }

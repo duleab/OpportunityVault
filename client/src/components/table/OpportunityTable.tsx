@@ -29,7 +29,8 @@ const SORTABLE_COLUMNS: Record<string, string> = {
   deadline: 'deadline',
   status: 'status',
   type: 'type',
-  urgency: 'urgencyLevel',
+  countries: 'countries',
+  urgency: 'daysLeft',
 };
 
 export function OpportunityTable({
@@ -120,7 +121,7 @@ export function OpportunityTable({
       cell: (info) => <Badge className={TYPE_COLORS[info.getValue()]}>{info.getValue()}</Badge>,
     }),
     columnHelper.accessor('countries', {
-      header: 'Countries',
+      header: () => <SortableHeader field="countries" label="Countries" />,
       cell: (info) => {
         const countries = info.getValue();
         const shown = countries.slice(0, 2);

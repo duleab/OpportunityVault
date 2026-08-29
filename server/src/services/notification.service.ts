@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { parseJsonArray, prisma, stringifyJsonArray } from '../lib/prisma.js';
 import type { Opportunity } from '@prisma/client';
 import { serializeOpportunity } from '../utils/serializeOpportunity.js';
+import { normalizeNotificationServerUrl } from '../utils/notificationUrl.js';
 
 export type NotificationPriority = 'min' | 'low' | 'default' | 'high' | 'urgent';
 
@@ -18,8 +19,8 @@ export interface SendNotificationParams {
 }
 
 export async function sendNotification(params: SendNotificationParams): Promise<void> {
-  const server = params.serverUrl || env.ntfyDefaultServer;
   try {
+    const server = normalizeNotificationServerUrl(params.serverUrl || env.ntfyDefaultServer);
     await axios.post(`${server}/${params.topic}`, params.message, {
       headers: {
         Title: params.title,

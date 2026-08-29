@@ -14,7 +14,8 @@ const SORT_OPTIONS = [
   { value: 'name',         label: 'Name'          },
   { value: 'status',       label: 'Status'        },
   { value: 'type',         label: 'Type'          },
-  { value: 'urgencyLevel', label: 'Urgency'       },
+  { value: 'countries',    label: 'Countries'     },
+  { value: 'daysLeft',     label: 'Days Left'     },
   { value: 'updatedAt',    label: 'Last Updated'  },
 ];
 

@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 export const env = {
+  nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parseInt(process.env.PORT ?? '4000', 10),
   clientUrl: process.env.CLIENT_URL ?? 'http://localhost:5173',
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET ?? 'dev-access-secret-change-me',
@@ -22,3 +23,14 @@ export const env = {
   ntfyDefaultServer: process.env.NTFY_DEFAULT_SERVER ?? 'https://ntfy.sh',
   notionApiKey: process.env.NOTION_API_KEY ?? '',
 };
+
+if (env.nodeEnv === 'production') {
+  const unsafeSecrets = [
+    ['JWT_ACCESS_SECRET', env.jwtAccessSecret, 'dev-access-secret-change-me'],
+    ['JWT_REFRESH_SECRET', env.jwtRefreshSecret, 'dev-refresh-secret-change-me'],
+  ].filter(([, value, fallback]) => value === fallback || value.length < 32);
+
+  if (unsafeSecrets.length > 0) {
+    throw new Error(`Missing or unsafe production secrets: ${unsafeSecrets.map(([name]) => name).join(', ')}`);
+  }
+}

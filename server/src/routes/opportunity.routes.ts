@@ -10,11 +10,13 @@ import {
   bulkStatus,
   exportOpportunities,
   checkDuplicate,
+  exportNotion,
 } from '../controllers/opportunity.controller.js';
 
 const router = Router();
 
 router.get('/export', authMiddleware, exportOpportunities);
+router.post('/export/notion', authMiddleware, exportNotion);
 router.get('/urgent', authMiddleware, getUrgent);
 router.get('/upcoming', authMiddleware, getUpcoming);
 router.get('/check-duplicate', authMiddleware, checkDuplicate);

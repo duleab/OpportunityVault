@@ -64,7 +64,7 @@ OpportunityVault is a personal opportunity management system designed for studen
 
 ![Create Account](./Figures/001-Create%20your%20account%20tab.png)
 
-Registration is free with no credit card required. Fill in an optional display name, your email, and a password (minimum 6 characters), then click **Create account →**.
+Registration is free with no credit card required. Fill in an optional display name, your email, and a password (minimum 12 characters), then click **Create account →**.
 
 ---
 
@@ -304,7 +304,7 @@ All provider configuration happens in **Settings → AI Provider** — no code c
 5. **Keys are auto-saved** when you click out of the field. A "API keys saved" toast notification confirms success.
 6. If you have entered any keys manually, a **Save API Keys** button also appears at the bottom to save all keys at once.
 
-> **Privacy note:** Your personal API keys are stored in the database associated with your user account. They are sent to the AI provider only when you trigger an extraction — they are never logged or shared.
+> **Privacy note:** Your personal API keys are encrypted before database storage and are never returned to the browser after saving. They are decrypted only when you trigger an extraction and are sent only to the selected AI provider.
 
 ---
 

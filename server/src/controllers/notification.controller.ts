@@ -5,11 +5,14 @@ import { extractWithFallback } from '../services/extraction.service.js';
 import { sendTestNotification } from '../services/notification.service.js';
 import { updateUserSettings, serializeUser } from '../services/auth.service.js';
 import { prisma } from '../lib/prisma.js';
+import { decryptSecretRecord } from '../utils/secretCrypto.js';
+import { normalizeNotificationServerUrl } from '../utils/notificationUrl.js';
+import { env } from '../config/env.js';
 
 export const testNotification = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { topic, serverUrl } = req.body as { topic?: string; serverUrl?: string };
   if (!topic) throw new AppError(400, 'topic is required');
-  await sendTestNotification(topic, serverUrl);
+  await sendTestNotification(topic, normalizeNotificationServerUrl(serverUrl ?? env.ntfyDefaultServer));
   res.json({ message: 'Test notification sent' });
 });
 
@@ -31,7 +34,7 @@ export const patchNotificationSettings = asyncHandler(async (req: AuthRequest, r
     ntfyTopic,
     ntfyEnabled,
     notifyDaysBefore,
-    ntfyServerUrl,
+    ntfyServerUrl: ntfyServerUrl ? normalizeNotificationServerUrl(ntfyServerUrl) : undefined,
   });
   res.json({ settings });
 });
@@ -57,7 +60,7 @@ export const patchSettings = asyncHandler(async (req: AuthRequest, res: Response
     aiProvider,
     ntfyTopic,
     ntfyEnabled,
-    ntfyServerUrl,
+    ntfyServerUrl: ntfyServerUrl ? normalizeNotificationServerUrl(ntfyServerUrl) : undefined,
     notifyDaysBefore,
     name,
     apiKeys,
@@ -73,7 +76,7 @@ export const testExtraction = asyncHandler(async (req: AuthRequest, res: Respons
   let userApiKeys: Record<string, string> = {};
   if (user?.apiKeys) {
     try {
-      userApiKeys = JSON.parse(user.apiKeys);
+      userApiKeys = decryptSecretRecord(user.apiKeys, env.jwtRefreshSecret);
     } catch {
       // Ignore
     }

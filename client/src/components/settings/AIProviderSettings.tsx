@@ -20,8 +20,7 @@ export function AIProviderSettings() {
   const [testing, setTesting] = useState(false);
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   
-  const initialKeys = user?.apiKeys || {};
-  const [apiKeys, setApiKeys] = useState<Record<string, string>>(initialKeys);
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [savingKeys, setSavingKeys] = useState(false);
 
   const saveProvider = async (provider: string) => {
@@ -118,7 +117,7 @@ export function AIProviderSettings() {
                   <input
                     type={showKeys[p.id] ? 'text' : 'password'}
                     className="block w-full rounded-md border-gray-300 pr-10 text-sm shadow-sm focus:border-accent focus:ring-accent"
-                    placeholder="Enter your API key"
+                    placeholder={user?.apiKeyConfigured[p.id] ? 'Key configured — enter a new value to replace' : 'Enter your API key'}
                     value={apiKeys[p.id] || ''}
                     onChange={(e) => handleKeyChange(p.id, e.target.value)}
                     onBlur={saveKeys}
@@ -131,6 +130,9 @@ export function AIProviderSettings() {
                     {showKeys[p.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {user?.apiKeyConfigured[p.id] && !apiKeys[p.id] && (
+                  <p className="mt-1 text-xs text-emerald-600">A key is securely configured.</p>
+                )}
               </div>
             )}
           </div>

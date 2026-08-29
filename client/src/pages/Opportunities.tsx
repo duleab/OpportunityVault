@@ -37,7 +37,7 @@ const DEFAULT_COLUMNS = [
 ];
 
 export function Opportunities() {
-  const { filters, setFilter, clearFilters, view, setView } = useFilters();
+  const { filters, setFilter, setFilters: setUrlFilters, clearFilters, view, setView } = useFilters();
   const opportunities = useOpportunityStore((s) => s.opportunities);
   const pagination    = useOpportunityStore((s) => s.pagination);
   const { loading, setFilters, updateStatus, remove, reload } = useOpportunities();
@@ -145,8 +145,7 @@ export function Opportunities() {
     if (filters.sortBy === field) {
       setFilter('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setFilter('sortBy', field);
-      setFilter('sortOrder', 'desc');
+      setUrlFilters({ sortBy: field, sortOrder: 'asc' });
     }
   };
 
@@ -355,7 +354,7 @@ export function Opportunities() {
           total={pagination.total}
           limit={pagination.limit}
           onPageChange={(p) => setFilter('page', String(p))}
-          onLimitChange={(l) => setFilter('limit', String(l))}
+          onLimitChange={(l) => setUrlFilters({ limit: String(l), page: null })}
         />
       )}
 

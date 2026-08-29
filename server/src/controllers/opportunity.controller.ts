@@ -10,6 +10,9 @@ import { exportCsv, exportJson, exportToNotion } from '../services/export.servic
 import { serializeOpportunity } from '../utils/serializeOpportunity.js';
 import type { ExtractedData } from '../types/index.js';
 import { calculateUrgency } from '../utils/urgencyCalculator.js';
+import { sortOpportunities } from '../utils/opportunitySort.js';
+import { decryptSecretRecord } from '../utils/secretCrypto.js';
+import { env } from '../config/env.js';
 
 const VALID_TYPES = new Set<string>([
   'SCHOLARSHIP', 'FELLOWSHIP', 'GRANT', 'JOB', 'INTERNSHIP', 'RESEARCH',
@@ -87,7 +90,7 @@ export const extractPreview = asyncHandler(async (req: AuthRequest, res: Respons
   let userApiKeys: Record<string, string> = {};
   if (user?.apiKeys) {
     try {
-      userApiKeys = JSON.parse(user.apiKeys);
+      userApiKeys = decryptSecretRecord(user.apiKeys, env.jwtRefreshSecret);
     } catch {
       // Ignore
     }
@@ -162,7 +165,7 @@ export const saveExtracted = asyncHandler(async (req: AuthRequest, res: Response
 });
 
 const VALID_SORT_FIELDS = new Set([
-  'deadline', 'createdAt', 'updatedAt', 'name', 'status', 'type', 'urgencyLevel',
+  'deadline', 'createdAt', 'updatedAt', 'name', 'status', 'type', 'countries', 'daysLeft',
 ]);
 
 export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -179,6 +182,7 @@ export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Resp
 
   // Sanitise sortBy to prevent injection of arbitrary field names
   const safeSortBy = VALID_SORT_FIELDS.has(sortBy) ? sortBy : 'createdAt';
+  const databaseSortBy = safeSortBy === 'countries' || safeSortBy === 'daysLeft' ? 'createdAt' : safeSortBy;
 
   const where: Record<string, unknown> = { userId };
   if (type) where.type = type;
@@ -195,7 +199,7 @@ export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Resp
 
   const rows = await prisma.opportunity.findMany({
     where: where as never,
-    orderBy: { [safeSortBy]: sortOrder === 'desc' ? 'desc' : 'asc' },
+    orderBy: { [databaseSortBy]: sortOrder === 'desc' ? 'desc' : 'asc' },
   });
 
   let serialized = rows.map(serializeOpportunity);
@@ -206,6 +210,8 @@ export const listOpportunities = asyncHandler(async (req: AuthRequest, res: Resp
       o.countries.some((c) => c.toLowerCase().includes(country.toLowerCase()))
     );
   }
+
+  serialized = sortOpportunities(serialized, safeSortBy, sortOrder);
 
   // Total is now accurate: computed AFTER all filters, BEFORE pagination slice
   const total = serialized.length;
@@ -339,18 +345,17 @@ export const exportOpportunities = asyncHandler(async (req: AuthRequest, res: Re
     return;
   }
 
-  if (format === 'notion') {
-    const { notionToken, databaseId } = req.query as Record<string, string>;
-    if (!notionToken || !databaseId) throw new AppError(400, 'notionToken and databaseId required');
-    const result = await exportToNotion(userId, notionToken, databaseId);
-    res.json(result);
-    return;
-  }
-
   const json = await exportJson(userId);
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Content-Disposition', 'attachment; filename=opportunities.json');
   res.send(json);
+});
+
+export const exportNotion = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { notionToken, databaseId } = req.body as { notionToken?: string; databaseId?: string };
+  if (!notionToken || !databaseId) throw new AppError(400, 'notionToken and databaseId required');
+  const result = await exportToNotion(req.user!.userId, notionToken, databaseId);
+  res.json(result);
 });
 
 export const getStats = asyncHandler(async (req: AuthRequest, res: Response) => {

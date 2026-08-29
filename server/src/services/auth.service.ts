@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { env } from '../config/env.js';
 import { parseJsonArray, prisma, stringifyJsonArray } from '../lib/prisma.js';
 import type { AuthUser, JwtPayload } from '../types/index.js';
+import { decryptSecretRecord, encryptSecretRecord, getConfiguredSecrets } from '../utils/secretCrypto.js';
 
 const SALT_ROUNDS = 12;
 
@@ -65,13 +66,7 @@ export function serializeUser(user: {
     ntfyEnabled: user.ntfyEnabled,
     ntfyServerUrl: user.ntfyServerUrl,
     aiProvider: user.aiProvider,
-    apiKeys: (() => {
-      try {
-        return JSON.parse(user.apiKeys) as Record<string, string>;
-      } catch {
-        return {};
-      }
-    })(),
+    apiKeyConfigured: getConfiguredSecrets(decryptSecretRecord(user.apiKeys, env.jwtRefreshSecret)),
     notifyDaysBefore: parseJsonArray<number>(user.notifyDaysBefore),
   };
 }
@@ -105,6 +100,14 @@ export async function loginUser(
 
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) throw new Error('Invalid credentials');
+
+  if (user.apiKeys && !user.apiKeys.startsWith('enc:v1:')) {
+    user.apiKeys = encryptSecretRecord(
+      decryptSecretRecord(user.apiKeys, env.jwtRefreshSecret),
+      env.jwtRefreshSecret
+    );
+    await prisma.user.update({ where: { id: user.id }, data: { apiKeys: user.apiKeys } });
+  }
 
   const payload: JwtPayload = { userId: user.id, email: user.email };
   const accessToken = signAccessToken(payload);
@@ -154,7 +157,15 @@ export async function updateUserSettings(
     updateData.notifyDaysBefore = stringifyJsonArray(data.notifyDaysBefore);
   }
   if (data.apiKeys) {
-    updateData.apiKeys = JSON.stringify(data.apiKeys);
+    const existing = await prisma.user.findUnique({ where: { id: userId }, select: { apiKeys: true } });
+    const merged = {
+      ...decryptSecretRecord(existing?.apiKeys ?? '{}', env.jwtRefreshSecret),
+      ...data.apiKeys,
+    };
+    Object.keys(merged).forEach((provider) => {
+      if (!merged[provider]?.trim()) delete merged[provider];
+    });
+    updateData.apiKeys = encryptSecretRecord(merged, env.jwtRefreshSecret);
   }
 
   const user = await prisma.user.update({

@@ -50,8 +50,8 @@ export function AccountSettings() {
 
   const handleChangePassword = async () => {
     if (!accessToken) return;
-    if (newPassword.length < 8) {
-      toast.error('New password must be at least 8 characters');
+    if (newPassword.length < 12) {
+      toast.error('New password must be at least 12 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -177,6 +177,8 @@ export function AccountSettings() {
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="new-password"
+              minLength={12}
+              maxLength={128}
               className="input-base w-full max-w-sm"
             />
           </div>
@@ -192,6 +194,8 @@ export function AccountSettings() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="new-password"
+              minLength={12}
+              maxLength={128}
               className="input-base w-full max-w-sm"
             />
             {confirmPassword && newPassword !== confirmPassword && (

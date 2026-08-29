@@ -55,7 +55,7 @@ export function Pagination({ page, totalPages, onPageChange, total, limit, onLim
               {LIMIT_OPTIONS.map((l) => (
                 <button
                   key={l}
-                  onClick={() => { onLimitChange(l); onPageChange(1); }}
+                  onClick={() => onLimitChange(l)}
                   className={`inline-flex items-center justify-center h-6 min-w-[2rem] rounded px-2 text-xs font-medium transition-colors ${
                     limit === l
                       ? 'bg-accent/10 text-accent font-semibold'

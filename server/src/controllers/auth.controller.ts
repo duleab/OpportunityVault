@@ -15,9 +15,11 @@ import { prisma } from '../lib/prisma.js';
 export const register = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { email, password, name } = req.body as { email?: string; password?: string; name?: string };
   if (!email || !password) throw new AppError(400, 'Email and password are required');
-  if (password.length < 6) throw new AppError(400, 'Password must be at least 6 characters');
+  if (password.length < 12) throw new AppError(400, 'Password must be at least 12 characters');
+  if (password.length > 128) throw new AppError(400, 'Password is too long');
+  if (email.length > 254) throw new AppError(400, 'Email is too long');
 
-  const result = await registerUser(email, password, name);
+  const result = await registerUser(email.trim().toLowerCase(), password, name?.trim().slice(0, 100));
   res.status(201).json(result);
 });
 
@@ -26,7 +28,7 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response) => {
   if (!email || !password) throw new AppError(400, 'Email and password are required');
 
   try {
-    const result = await loginUser(email, password);
+    const result = await loginUser(email.trim().toLowerCase(), password);
     res.json(result);
   } catch (err) {
     if (err instanceof Error && err.message === 'Invalid credentials') {
@@ -76,8 +78,8 @@ export const changePassword = asyncHandler(async (req: AuthRequest, res: Respons
   if (!currentPassword || !newPassword) {
     throw new AppError(400, 'currentPassword and newPassword are required');
   }
-  if (newPassword.length < 6) {
-    throw new AppError(400, 'New password must be at least 6 characters');
+  if (newPassword.length < 12) {
+    throw new AppError(400, 'New password must be at least 12 characters');
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });

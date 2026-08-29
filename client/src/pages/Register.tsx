@@ -16,7 +16,7 @@ export function Register() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) return toast.error('Password must be at least 6 characters');
+    if (password.length < 12) return toast.error('Password must be at least 12 characters');
     setLoading(true);
     try {
       await register(email, password, name || undefined);
@@ -105,7 +105,9 @@ export function Register() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 6 characters"
+                placeholder="Min. 12 characters"
+                minLength={12}
+                maxLength={128}
                 className="input-base"
                 autoComplete="new-password"
               />
