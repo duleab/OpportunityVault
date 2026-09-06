@@ -13,7 +13,7 @@ describe('getProviderTestPlan', () => {
     expect(getProviderTestPlan('groq', {}, true)).toEqual({ canTest: true });
   });
 
-  it('blocks testing when no key is available', () => {
-    expect(getProviderTestPlan('groq', {}, false)).toEqual({ canTest: false });
+  it('lets the server check for a configured global key', () => {
+    expect(getProviderTestPlan('groq', {}, false)).toEqual({ canTest: true });
   });
 });
