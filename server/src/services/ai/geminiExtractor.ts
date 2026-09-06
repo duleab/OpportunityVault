@@ -5,7 +5,7 @@ import { buildPrompt } from './prompt.js';
 import { parseExtractedJson, withTimeout, type AIExtractor } from './aiProvider.js';
 
 const GEMINI_ENDPOINT =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
 
 export const geminiExtractor: AIExtractor = {
   name: 'gemini',

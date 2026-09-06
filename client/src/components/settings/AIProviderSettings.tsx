@@ -5,11 +5,13 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { patchSettings, testExtraction } from '../../services/authService';
 import { Button } from '../ui/Button';
 import { Eye, EyeOff } from 'lucide-react';
+import { ApiError } from '../../services/api';
+import { getProviderTestPlan } from '../../utils/providerTestPlan';
 
 const PROVIDERS = [
-  { id: 'groq',    label: 'Groq (Llama 3.3 70B)',    desc: 'Fastest • Free tier',  keyName: 'Groq API Key', requiresKey: true },
+  { id: 'groq',    label: 'Groq (Qwen 3.6 27B)',      desc: 'Fast • Multimodal',    keyName: 'Groq API Key', requiresKey: true },
   { id: 'zhipu',   label: 'Z.ai GLM-4 Flash',         desc: 'ZhipuAI • Fast',       keyName: 'Zhipu API Key', requiresKey: true },
-  { id: 'gemini',  label: 'Google Gemini 1.5 Flash',  desc: 'Google • Free tier',   keyName: 'Gemini API Key', requiresKey: true },
+  { id: 'gemini',  label: 'Google Gemini 3.6 Flash',  desc: 'Google • Fast',        keyName: 'Gemini API Key', requiresKey: true },
   { id: 'mistral', label: 'Mistral Small',             desc: 'Mistral AI • Free',    keyName: 'Mistral API Key', requiresKey: true },
   { id: 'ollama',  label: 'Ollama (Local)',             desc: 'Self-hosted • No key', keyName: '', requiresKey: false },
 ];
@@ -45,6 +47,7 @@ export function AIProviderSettings() {
     try {
       const res = await patchSettings(accessToken, { apiKeys });
       updateUser(res.settings);
+      setApiKeys({});
       toast.success('API keys saved');
     } catch {
       toast.error('Failed to save API keys');
@@ -55,12 +58,27 @@ export function AIProviderSettings() {
 
   const test = async (providerId?: string) => {
     if (!accessToken) return;
+    const selectedProvider = providerId || aiProvider;
+    const plan = getProviderTestPlan(
+      selectedProvider,
+      apiKeys,
+      selectedProvider === 'ollama' || Boolean(user?.apiKeyConfigured[selectedProvider])
+    );
+    if (!plan.canTest) {
+      toast.error('Enter an API key for this provider before testing.');
+      return;
+    }
     setTesting(true);
     try {
-      await testExtraction(accessToken, providerId || aiProvider);
-      toast.success(`Test extraction succeeded!`);
-    } catch {
-      toast.error('Test failed — check API key for this provider');
+      if (plan.keyToSave) {
+        const res = await patchSettings(accessToken, { apiKeys: { [selectedProvider]: plan.keyToSave } });
+        updateUser(res.settings);
+        setApiKeys((current) => ({ ...current, [selectedProvider]: '' }));
+      }
+      await testExtraction(accessToken, selectedProvider);
+      toast.success('Provider connection and extraction succeeded.');
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'Provider test failed. Please try again.');
     } finally {
       setTesting(false);
     }
@@ -120,7 +138,6 @@ export function AIProviderSettings() {
                     placeholder={user?.apiKeyConfigured[p.id] ? 'Key configured — enter a new value to replace' : 'Enter your API key'}
                     value={apiKeys[p.id] || ''}
                     onChange={(e) => handleKeyChange(p.id, e.target.value)}
-                    onBlur={saveKeys}
                   />
                   <button
                     type="button"

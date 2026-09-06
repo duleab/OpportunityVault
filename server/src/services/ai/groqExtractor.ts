@@ -12,7 +12,7 @@ export const groqExtractor: AIExtractor = {
     return withTimeout(
       (async () => {
         const apiKey = options?.userApiKey || env.groqApiKey;
-        const model = options?.imageBase64 ? 'llama-3.2-90b-vision-preview' : 'llama-3.3-70b-versatile';
+        const model = 'qwen/qwen3.6-27b';
         
         let contentArray: any[] = [{ type: 'text', text: buildPrompt(rawText || 'Extract data from the image.') }];
         if (options?.imageBase64) {
