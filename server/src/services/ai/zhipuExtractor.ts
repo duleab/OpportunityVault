@@ -4,9 +4,10 @@ import type { ExtractedData } from '../../types/index.js';
 import { buildPrompt } from './prompt.js';
 import { parseExtractedJson, withTimeout, type AIExtractor } from './aiProvider.js';
 
-// ZhipuAI (智谱AI) — GLM-4 series
-// API docs: https://open.bigmodel.cn/dev/api
-const ZHIPU_ENDPOINT = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+// Z.ai global API. Keep these exported so provider migrations are regression tested.
+export const ZHIPU_ENDPOINT = 'https://api.z.ai/api/paas/v4/chat/completions';
+export const ZHIPU_TEXT_MODEL = 'glm-4.7-flash';
+export const ZHIPU_VISION_MODEL = 'glm-4.6v-flash';
 
 export const zhipuExtractor: AIExtractor = {
   name: 'zhipu',
@@ -14,7 +15,7 @@ export const zhipuExtractor: AIExtractor = {
     return withTimeout(
       (async () => {
         const apiKey = options?.userApiKey || env.zhipuApiKey;
-        const model = options?.imageBase64 ? 'glm-4v-flash' : 'glm-4-flash';
+        const model = options?.imageBase64 ? ZHIPU_VISION_MODEL : ZHIPU_TEXT_MODEL;
         
         let contentArray: any[] = [{ type: 'text', text: buildPrompt(rawText || 'Extract data from the image.') }];
         if (options?.imageBase64) {
